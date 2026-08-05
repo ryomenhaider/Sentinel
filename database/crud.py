@@ -3,10 +3,6 @@ from sqlalchemy.orm import Session
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy import text
 
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-
 from database.models import (
     MarketData, CryptoPrice, EconomicIndicator,
     NewsSentiment, Anomaly, Forecast, PortfolioWeight, ModelRun, Features
