@@ -123,12 +123,9 @@ def load_production_data(ticker: str, days: int = PRODUCTION_DAYS) -> pd.DataFra
     return df
 
 
-def detect_drift(ticker: str, 
-                 baseline_days: int = BASELINE_DAYS, 
-                 production_days: int = PRODUCTION_DAYS
-                 
-                 # at this point i am mentally ill 
-                 ) -> dict:
+def detect_drift(ticker: str,
+                 baseline_days: int = BASELINE_DAYS,
+                 production_days: int = PRODUCTION_DAYS) -> dict:
     
     baseline_df = load_baseline_data(ticker, baseline_days)
     production_df = load_production_data(ticker, production_days)

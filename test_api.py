@@ -15,10 +15,10 @@ HEADERS = {"X-API-Key": "changeme"}
 
 def test_health():
     print("=" * 60)
-    print("1. Testing /health endpoint")
+    print("1. Testing /api/health endpoint")
     print("=" * 60)
     try:
-        r = requests.get(f"{API_BASE}/health", headers=HEADERS, timeout=3)
+        r = requests.get(f"{API_BASE}/api/health", headers=HEADERS, timeout=3)
         print(f"Status: {r.status_code}")
         pprint(r.json())
     except Exception as e:
@@ -27,10 +27,10 @@ def test_health():
 
 def test_prices():
     print("=" * 60)
-    print("2. Testing /prices/AAPL endpoint")
+    print("2. Testing /api/prices/AAPL endpoint")
     print("=" * 60)
     try:
-        r = requests.get(f"{API_BASE}/prices/AAPL", headers=HEADERS, timeout=3)
+        r = requests.get(f"{API_BASE}/api/prices/AAPL", headers=HEADERS, timeout=3)
         print(f"Status: {r.status_code}")
         if r.status_code == 200:
             print("Response structure:")
@@ -43,10 +43,10 @@ def test_prices():
 
 def test_prices_history():
     print("=" * 60)
-    print("3. Testing /prices/AAPL/history endpoint")
+    print("3. Testing /api/prices/AAPL/history endpoint")
     print("=" * 60)
     try:
-        r = requests.get(f"{API_BASE}/prices/AAPL/history", 
+        r = requests.get(f"{API_BASE}/api/prices/AAPL/history", 
                         params={"limit": 5}, headers=HEADERS, timeout=3)
         print(f"Status: {r.status_code}")
         if r.status_code == 200:
@@ -66,10 +66,10 @@ def test_prices_history():
 
 def test_anomalies():
     print("=" * 60)
-    print("4. Testing /anomalies endpoint")
+    print("4. Testing /api/anomalies endpoint")
     print("=" * 60)
     try:
-        r = requests.get(f"{API_BASE}/anomalies", 
+        r = requests.get(f"{API_BASE}/api/anomalies", 
                         params={"ticker": "AAPL", "days": 30}, 
                         headers=HEADERS, timeout=3)
         print(f"Status: {r.status_code}")
@@ -84,10 +84,10 @@ def test_anomalies():
 
 def test_sentiment():
     print("=" * 60)
-    print("5. Testing /sentiment/timeline endpoint")
+    print("5. Testing /api/sentiment/timeline endpoint")
     print("=" * 60)
     try:
-        r = requests.get(f"{API_BASE}/sentiment/timeline", 
+        r = requests.get(f"{API_BASE}/api/sentiment/timeline", 
                         params={"ticker": "AAPL", "days": 30}, 
                         headers=HEADERS, timeout=3)
         print(f"Status: {r.status_code}")

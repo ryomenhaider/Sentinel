@@ -1,33 +1,43 @@
 [project]
-name = "financial-intelligence-platform"
+name = "sentinel"
 version = "0.1.0"
-description = "Add your description here"
+description = "Financial intelligence platform: real-time data ingestion, anomaly detection, forecasting, and sentiment analytics"
 readme = "README.md"
 requires-python = "==3.11.*"
 dependencies = [
-    "apache-airflow>=2.10.5",
-    "ccxt>=4.5.40",
-    "dash>=4.0.0",
-    "dash-bootstrap-components>=2.0.4",
-    "dotenv>=0.9.9",
-    "graphviz>=0.21",
-    "mlflow>=2.10.0",
-    "pandas<3",
-    "plotly>=6.6.0",
-    "prophet>=1.3.0",
-    "protobuf>=4.25.0,<5.0.0",
+    # API
+    "fastapi==0.111.0",
+    "uvicorn[standard]==0.30.0",
+    "python-dotenv==1.0.1",
+    "pydantic==2.7.1",
+    # Database
+    "sqlalchemy==2.0.47",
     "psycopg2-binary==2.9.9",
-    "pyod>=2.0.6",
-    "pypi>=2.1",
-    "python-dotenv>=1.2.1",
-    "requests>=2.32.5",
-    "requests-ratelimiter>=0.9.1",
-    "scikit-learn>=1.8.0",
-    "sqlalchemy>=2.0.47",
-    "torch>=2.10.0",
-    "transformers>=5.2.0",
-    "xgboost>=3.2.0",
-    "yfinance>=1.2.0",
+    "alembic==1.13.1",
+    # Data
+    "pandas==2.2.2",
+    "numpy==1.26.4",
+    "pyarrow>=4.0.0,<16",
+    "yfinance==1.2.0",
+    "ccxt==4.5.40",
+    # ML
+    "scikit-learn==1.4.2",
+    "pyod==1.1.3",
+    "prophet==1.1.5",
+    "xgboost==2.0.3",
+    "scipy==1.13.1",
+    "torch==2.1.0",
+    "transformers==4.40.0",
+    # Dashboard
+    "dash==3.0.4",
+    "plotly==5.22.0",
+    "dash-bootstrap-components==2.0.4",
+    # Utils
+    "requests==2.32.2",
+    "tqdm==4.66.4",
+    "tabulate==0.9.0",
+    # MLflow
+    "mlflow==2.13.0",
 ]
 
 [[tool.uv.index]]

@@ -19,7 +19,7 @@ from api.routers.sentiment import router as sentiment_router
 logger = get_logger(__name__)
 
 app = FastAPI(
-    title="Financial Intelligence Platform",
+    title="Sentinel",
     description=(
         "A production-grade system that ingests real-time and historical financial data, "
         "detects anomalies, forecasts price movements, and visualises everything in a "
@@ -52,9 +52,9 @@ async def startup():
         from database.connection import test_connection
         db_ok = test_connection()
         if db_ok:
-            logger.info(f"FIP API v{app.version} started successfully | Database: connected")
+            logger.info(f"Sentinel API v{app.version} started successfully | Database: connected")
         else:
-            logger.warning(f"FIP API v{app.version} started | Database: unreachable")
+            logger.warning(f"Sentinel API v{app.version} started | Database: unreachable")
     except Exception as e:
         logger.error(f"Startup error: {e}")
 
@@ -65,7 +65,7 @@ async def root():
   <head>
     <meta charset="UTF-8">
     <meta http-equiv="refresh" content="0; url=/dashboard/" />
-    <title>FIP — Redirecting…</title>
+    <title>Sentinel — Redirecting…</title>
   </head>
   <body style="background:#0A0E17;color:#E8EDF5;font-family:monospace;padding:40px;">
     <p>Redirecting to <a href="/dashboard/" style="color:#00D4FF;">dashboard</a>…</p>

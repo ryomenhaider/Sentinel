@@ -26,7 +26,7 @@ app = dash.Dash(
     suppress_callback_exceptions=True,
     meta_tags=[{"name": "viewport", "content": "width=device-width, initial-scale=1"}],
 )
-app.title = "FIP — Financial Intelligence Platform"
+app.title = "Sentinel"
 
 server = app.server
 
@@ -55,7 +55,7 @@ def _nl(icon, label, href):
 
 navbar = html.Div([
     html.Div([
-        html.Span("FIP", style={
+        html.Span("SENTINEL", style={
             "fontFamily": "'IBM Plex Mono',monospace", "fontWeight": "600",
             "fontSize": "17px", "color": COLORS["blue"], "letterSpacing": "5px",
         }),
