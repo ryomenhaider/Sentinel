@@ -114,7 +114,9 @@ cp .env.example .env
 #      (local, Docker, or Supabase pooler URL)
 
 # 3. Initialize schema + seed data
-python init_db.py
+#    Option A — Supabase: paste database/schema.sql then database/seed_data.sql
+#              into the SQL Editor (recommended)
+#    Option B — any Postgres: psql "$DB_URL" -f database/schema.sql && psql "$DB_URL" -f database/seed_data.sql
 
 # 4. Ingest data (see Orchestration for automation)
 python -m ingestion.ingestion_pipeline        # or individually:
@@ -131,7 +133,7 @@ python -m ml.train_pipeline
 uvicorn api.main:app --host 0.0.0.0 --port 7860
 
 # 7. Verify
-python test_api.py        # endpoint + DB diagnostics
+curl http://localhost:7860/api/health          # {"status":"ok","database":"connected",...}
 ```
 
 ### Access
@@ -172,13 +174,11 @@ python test_api.py        # endpoint + DB diagnostics
 │   └── train_pipeline.py      # orchestrated training with metrics
 ├── mlops/
 │   └── drift_detector.py      # PSI + KS drift detection, Slack/email alerts
-├── database/                   # SQLAlchemy models, CRUD, alembic migrations
+├── database/                   # SQLAlchemy models, CRUD, schema.sql + seed_data.sql
 ├── config/                     # settings.py, logging_config.py (JSON logs)
 ├── airflow/dags/               # LEGACY Airflow DAGs (retired — see Roadmap)
 ├── res/                        # Roadmap docs (Phase 1–5)
-├── Dockerfile                  # single-container build (CPU torch)
-├── test_api.py                 # endpoint diagnostics
-└── init_db.py                  # schema + seed loader
+└── .python-version             # Python 3.11 (uv)
 ```
 
 ---
@@ -230,27 +230,23 @@ All configuration is environment-driven (`config/settings.py`). See `.env.exampl
 
 ## 🐳 Docker
 
-```bash
-docker build -t sentinel .
-docker run -p 7860:7860 --env-file .env sentinel
-```
-
-The image installs CPU-only torch from the PyTorch CPU index to keep it small, and runs a single uvicorn process (API + dashboard). Healthcheck hits `/api/health`.
+The `Dockerfile` was removed in the repo cleanup and is recreated in [Phase 5](res/PHASE_5_DEPLOY_HUGGINGFACE.md) (single container: CPU torch from the PyTorch CPU index, one uvicorn process serving API + dashboard, healthcheck on `/api/health`).
 
 ---
 
 ## 🧪 Testing
 
 ```bash
-# Quick endpoint + DB diagnostics (needs the app running)
-python test_api.py
-
 # Pipelines (each exits non-zero on failure)
 python -m ingestion.ingestion_pipeline
 python -m ml.train_pipeline
 
 # Drift detection CLI
 python mlops/drift_detector.py --tickers AAPL,MSFT --send-alerts
+
+# API smoke checks
+curl http://localhost:7860/api/health
+curl http://localhost:7860/api/prices/AAPL/history?limit=5
 ```
 
 ---
@@ -274,7 +270,7 @@ python mlops/drift_detector.py --tickers AAPL,MSFT --send-alerts
 - Ingestion: stocks, crypto, macro, news (FinBERT), feature engineering
 - ML: PyOD anomalies, Prophet+XGBoost forecasts, MVO portfolio, MLflow registry
 - Drift detection (PSI + KS) with email/Slack alerts
-- Single-container Docker image (CPU torch), JSON logging
+- Single-process architecture: API + dashboard in one app, JSON logging
 - Phase 0 hygiene: dependency unification, honest docs, dead code removed
 
 ---
