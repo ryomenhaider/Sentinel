@@ -34,7 +34,7 @@ data/models/
 *.feather
 *.h5
 *.db
-
+res/
 airflow/airflow.cfg
 airflow/logs/
 airflow/plugins/__pycache__/
