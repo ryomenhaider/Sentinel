@@ -76,9 +76,7 @@ def transform(articles: list, ticker: str, pipe) -> list[dict]:
 
 def run():
     pipe = load_finbert()
-    session = get_session()
-
-    try:
+    with get_session() as session:
         for symbol in TICKERS:
             print(f"[{symbol}] Fetching news...")
             try:
@@ -100,9 +98,6 @@ def run():
                 session.rollback()
 
             time.sleep(1)  # stay within rate limits
-
-    finally:
-        session.close()
 
 
 if __name__ == "__main__":

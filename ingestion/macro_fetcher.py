@@ -46,8 +46,7 @@ def transform(observations: list[dict], series_id: str) -> list[dict]:
     return records
 
 def run():
-    session = get_session()
-    try:
+    with get_session() as session:
         for series_id, name in SERIES.items():
             print(f"[{series_id}] Fetching '{name}'...")
             try:
@@ -66,8 +65,6 @@ def run():
             except Exception as e:
                 print(f"[{series_id}] Unexpected error: {e}")
                 session.rollback()
-    finally:
-        session.close()
 
 if __name__ == '__main__':
     run()
