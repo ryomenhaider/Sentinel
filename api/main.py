@@ -1,38 +1,38 @@
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-
-import os
 import time
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.wsgi import WSGIMiddleware
 from fastapi.responses import HTMLResponse
 import uvicorn
+
 from config.logging_config import get_logger
 from api.routers.prices import router as prices_router
 from api.routers.anomalies import router as anomalies_router
 from api.routers.forecasts import router as forecasts_router
 from api.routers.portfolio import router as portfolio_router
 from api.routers.sentiment import router as sentiment_router
+from api.auth import verify_jwt
 
 logger = get_logger(__name__)
 
 app = FastAPI(
     title="Sentinel",
     description=(
-        "A production-grade system that ingests real-time and historical financial data, "
-        "detects anomalies, forecasts price movements, and visualises everything in a "
-        "Bloomberg-style dashboard."
+        """
+        A system that ingests real-time and historical financial data, 
+        detects anomalies, forecasts price movements, and visualises 
+        everything in a dashboard.
+        """
     ),
     version="0.1.0",
     docs_url="/api/docs",
     redoc_url="/api/redoc",
+    dependencies=[Depends(verify_jwt)]
 )
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://traditional-kamillah-fip-b560683c.koyeb.app/"],
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -72,7 +72,6 @@ async def root():
   </body>
 </html>""")
 
-# FIX: route is /api/health (was missing /api/ prefix in theme.py's API_HEALTH)
 @app.get("/api/health")
 async def health():
     try:
@@ -86,16 +85,15 @@ async def health():
         "version": app.version,
     }
 
-# FIX: Register routers BEFORE mounting Dash to avoid route shadowing
+
 app.include_router(prices_router,    prefix="/api/prices",    tags=["Prices"])
 app.include_router(anomalies_router, prefix="/api/anomalies", tags=["Anomalies"])
 app.include_router(forecasts_router, prefix="/api/forecasts", tags=["Forecasts"])
 app.include_router(portfolio_router, prefix="/api/portfolio", tags=["Portfolio"])
 app.include_router(sentiment_router, prefix="/api/sentiment", tags=["Sentiment"])
 
-# Mount Dash LAST — WSGIMiddleware catches everything under /dashboard/
 from dashboard.app import server as dash_server
-app.mount("/dashboard", WSGIMiddleware(dash_server))
+app.mount("/", WSGIMiddleware(dash_server))
 
 if __name__ == "__main__":
     uvicorn.run("api.main:app", host="0.0.0.0", port=7860, reload=True)
