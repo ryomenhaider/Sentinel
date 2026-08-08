@@ -16,7 +16,6 @@ dependencies = [
     "uvloop>=0.22.1",
     "watchfiles>=1.2.0",
     "xgboost>=3.2.0",
-    "yfinance>=1.5.2",
 ]
 
 [project.scripts]
