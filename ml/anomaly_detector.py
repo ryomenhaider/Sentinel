@@ -108,18 +108,10 @@ def save_anomalies(df: pd.DataFrame, ticker: str) -> None:
         for row in anomalies_df.to_dict(orient="records")
     ]
 
-    session = get_session()
-    try:
+    with get_session() as session:
         insert_anomaly(session, rows)
         logger.info(f"[{ticker}] Saved {len(rows)} anomalies to DB")
-        session.commit()
         print(f"[{ticker}] Saved {len(rows)} anomalies to DB")
-    except Exception as e:
-        session.rollback()
-        logger.error(f"[{ticker}] Failed to save anomalies: {e}")
-        raise
-    finally:
-        session.close()
 
 
 def run(ticker: str) -> None:

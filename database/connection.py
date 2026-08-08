@@ -20,6 +20,7 @@ Session_local = sessionmaker(
         bind=engine,
         autocommit=False,
         autoflush=False,
+        expire_on_commit=False,
     )
 
 
