@@ -31,6 +31,12 @@ async def get_latest_anomaly_endpoint():
 
 
 # GET /anomalies?ticker=AAPL&days=30
+# FIX: "" alias matches /api/anomalies (no trailing slash) — the "/" route only
+# matches /api/anomalies/, and the catch-all WSGI mount would swallow the rest.
+@router.get("", response_model=List[AnomalyResponse], include_in_schema=False)
+async def get_anomalies_no_slash(ticker: str, days: int = 30):
+    return await get_anomalies(ticker, days)
+
 @router.get("/", response_model=List[AnomalyResponse])
 async def get_anomalies(ticker: str, days: int = 30):
     with get_session() as session:

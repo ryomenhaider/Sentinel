@@ -3,6 +3,20 @@ import os
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+os.environ.setdefault("SETUPTOOLS_USE_DISTUTILS", "stdlib")
+try:
+    import _distutils_hack
+
+    _distutils_hack.remove_shim()
+    for _m in [m for m in list(sys.modules) if m == "distutils" or m.startswith("distutils.")]:
+        del sys.modules[_m]
+except Exception:
+    pass
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
 import mlflow
 import mlflow.sklearn
 from mlflow.tracking import MlflowClient
@@ -46,7 +60,6 @@ def save_model(model, model_name: str, ticker: str,
         mlflow.sklearn.log_model(
             sk_model=model,
             artifact_path=model_name,
-            registered_model_name=f"{model_name}_{ticker}"
         )
 
         logger.info(f"Saved {model_name} for {ticker} — run_id: {run.info.run_id}")

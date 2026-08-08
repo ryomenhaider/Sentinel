@@ -27,7 +27,6 @@ app = FastAPI(
     version="0.1.0",
     docs_url="/api/docs",
     redoc_url="/api/redoc",
-    dependencies=[Depends(verify_jwt)]
 )
 
 app.add_middleware(
@@ -86,11 +85,11 @@ async def health():
     }
 
 
-app.include_router(prices_router,    prefix="/api/prices",    tags=["Prices"])
-app.include_router(anomalies_router, prefix="/api/anomalies", tags=["Anomalies"])
-app.include_router(forecasts_router, prefix="/api/forecasts", tags=["Forecasts"])
-app.include_router(portfolio_router, prefix="/api/portfolio", tags=["Portfolio"])
-app.include_router(sentiment_router, prefix="/api/sentiment", tags=["Sentiment"])
+app.include_router(prices_router,    prefix="/api/prices",    tags=["Prices"],    dependencies=[Depends(verify_jwt)])
+app.include_router(anomalies_router, prefix="/api/anomalies", tags=["Anomalies"], dependencies=[Depends(verify_jwt)])
+app.include_router(forecasts_router, prefix="/api/forecasts", tags=["Forecasts"], dependencies=[Depends(verify_jwt)])
+app.include_router(portfolio_router, prefix="/api/portfolio", tags=["Portfolio"], dependencies=[Depends(verify_jwt)])
+app.include_router(sentiment_router, prefix="/api/sentiment", tags=["Sentiment"], dependencies=[Depends(verify_jwt)])
 
 from dashboard.app import server as dash_server
 app.mount("/", WSGIMiddleware(dash_server))

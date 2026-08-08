@@ -6,7 +6,7 @@ import dash, requests
 from dash import dcc, html, Input, Output, callback, State
 import plotly.graph_objects as go
 import pandas as pd
-from dashboard.theme import COLORS, PLOT_BASE, API_BASE, HEADERS
+from dashboard.theme import COLORS, PLOT_BASE, API, HEADERS
 dash.register_page(__name__, path="/forecasts", name="Forecasting Center", order=2)
 
 TICKERS  = ["AAPL","MSFT","GOOGL","TSLA","NVDA","BTC-USD","ETH-USD","SPY"]
@@ -132,7 +132,7 @@ def update_forecast(ticker, horizon):
     defaults = (empty, html.Div("No data"), "—","—","—","—","—")
 
     try:
-        r = requests.get(f"{API_BASE}/forecasts/{ticker}",
+        r = requests.get(f"{API}/forecasts/{ticker}",
                          params={"horizon": horizon}, headers=HEADERS, timeout=8)
         if r.status_code != 200:
             return defaults
@@ -151,7 +151,7 @@ def update_forecast(ticker, horizon):
 
     # Fetch historical prices
     try:
-        rh = requests.get(f"{API_BASE}/prices/{ticker}/history",
+        rh = requests.get(f"{API}/prices/{ticker}/history",
                           params={"limit": 90}, headers=HEADERS, timeout=6)
         hist = pd.DataFrame(rh.json()) if rh.status_code == 200 else pd.DataFrame()
         if not hist.empty:
@@ -232,7 +232,7 @@ def update_compare(n_clicks, horizon, tickers_str):
 
     try:
         tickers = ",".join([t.strip().upper() for t in tickers_str.split(",")])
-        r = requests.get(f"{API_BASE}/forecasts/compare",
+        r = requests.get(f"{API}/forecasts/compare",
                          params={"tickers": tickers, "horizon": horizon},
                          headers=HEADERS, timeout=10)
         if r.status_code != 200:

@@ -8,7 +8,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import pandas as pd
 from datetime import datetime
-from dashboard.theme import COLORS, PLOT_BASE, API_BASE, HEADERS
+from dashboard.theme import COLORS, PLOT_BASE, API, HEADERS
 from config.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -124,7 +124,7 @@ def update_candle(ticker, days, _):
     defaults = (empty,) + ("—",) * 8
 
     try:
-        r = requests.get(f"{API_BASE}/prices/{ticker}/history",
+        r = requests.get(f"{API}/prices/{ticker}/history",
                          params={"limit": days}, headers=HEADERS, timeout=6)
         if r.status_code != 200:
             logger.error(f"API returned {r.status_code} for {ticker}: {r.text[:200]}")
@@ -265,7 +265,7 @@ def update_movers(_):
     rows = []
     for t in TICKERS[:10]:
         try:
-            r = requests.get(f"{API_BASE}/prices/{t}/history",
+            r = requests.get(f"{API}/prices/{t}/history",
                              params={"limit": 2}, headers=HEADERS, timeout=4)
             if r.status_code != 200:
                 continue

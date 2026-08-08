@@ -2,6 +2,7 @@ import os
 
 HEADERS    = {"X-API-Key": os.getenv("DASHBOARD_API_KEY", "changeme")}
 API_BASE   = os.getenv("API_BASE_URL", "http://localhost:7860")
+API        = f"{API_BASE}/api"
 # FIX: was "/health", actual FastAPI route is "/api/health"
 API_HEALTH = f"{API_BASE}/api/health"
 

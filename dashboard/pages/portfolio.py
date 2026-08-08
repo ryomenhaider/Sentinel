@@ -8,7 +8,7 @@ import plotly.graph_objects as go
 import pandas as pd
 import numpy as np
 from collections import defaultdict
-from dashboard.theme import COLORS, PLOT_BASE, API_BASE, HEADERS
+from dashboard.theme import COLORS, PLOT_BASE, API, HEADERS
 
 dash.register_page(__name__, path="/portfolio", name="Capital Allocation", order=3)
 
@@ -136,7 +136,7 @@ def _compute_kpis(weights_dict: dict, method: str) -> dict:
     try:
         prices = {}
         for ticker in weights_dict:
-            r = requests.get(f"{API_BASE}/prices/{ticker}/history",
+            r = requests.get(f"{API}/prices/{ticker}/history",
                              params={"limit": 252}, headers=HEADERS, timeout=5)
             if r.status_code == 200:
                 d = pd.DataFrame(r.json())
@@ -208,7 +208,7 @@ def update_portfolio(method):
 
     # ── Fetch weights ─────────────────────────────────────────────────────────
     try:
-        rw = requests.get(f"{API_BASE}/portfolio/weights",
+        rw = requests.get(f"{API}/portfolio/weights",
                           headers=HEADERS, timeout=6)
         weights_list = rw.json() if rw.status_code == 200 else []
         if not isinstance(weights_list, list):
@@ -286,7 +286,7 @@ def update_portfolio(method):
     try:
         prices = {}
         for ticker in all_tickers:
-            r = requests.get(f"{API_BASE}/prices/{ticker}/history",
+            r = requests.get(f"{API}/prices/{ticker}/history",
                              params={"limit": 252}, headers=HEADERS, timeout=5)
             if r.status_code == 200:
                 d = pd.DataFrame(r.json())

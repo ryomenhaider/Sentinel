@@ -7,7 +7,7 @@ from dash import dcc, html, Input, Output, callback
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import pandas as pd
-from dashboard.theme import COLORS, PLOT_BASE, API_BASE, HEADERS
+from dashboard.theme import COLORS, PLOT_BASE, API, HEADERS
 from config.logging_config import get_logger
 
 dash.register_page(__name__, path="/anomalies", name="Anomaly Intelligence", order=1)
@@ -145,7 +145,7 @@ def update_anomaly(ticker, days, severity):
 
     # Fetch prices
     try:
-        rp = requests.get(f"{API_BASE}/prices/{ticker}/history",
+        rp = requests.get(f"{API}/prices/{ticker}/history",
                           params={"limit": days}, headers=HEADERS, timeout=6)
         if rp.status_code != 200:
             return defaults
@@ -168,7 +168,7 @@ def update_anomaly(ticker, days, severity):
 
     # Fetch anomalies
     try:
-        ra = requests.get(f"{API_BASE}/anomalies",
+        ra = requests.get(f"{API}/anomalies",
                           params={"ticker": ticker, "days": days},
                           headers=HEADERS, timeout=6)
         anomalies = pd.DataFrame(ra.json()) if ra.status_code == 200 else pd.DataFrame()

@@ -6,7 +6,7 @@ import dash, requests, traceback
 from dash import dcc, html, Input, Output, callback
 import plotly.graph_objects as go
 import pandas as pd
-from dashboard.theme import COLORS, PLOT_BASE, API_BASE, HEADERS
+from dashboard.theme import COLORS, PLOT_BASE, API, HEADERS
 
 dash.register_page(__name__, path="/sentiment", name="Sentiment Analysis", order=4)
 
@@ -108,12 +108,8 @@ def update_sentiment(ticker, days):
     defaults = (empty, empty, empty, html.Div("No data"), [])
 
     try:
-        print(f"\nDEBUG sentiment: ticker={ticker} days={days} API_BASE={API_BASE}")
-
-        r = requests.get(f"{API_BASE}/sentiment/{ticker}",
+        r = requests.get(f"{API}/sentiment/{ticker}",
                          params={"days": days}, headers=HEADERS, timeout=6)
-        print(f"DEBUG status={r.status_code} url={r.url}")
-        print(f"DEBUG response[:300]={r.text[:300]}")
 
         if r.status_code != 200:
             return defaults
@@ -191,7 +187,7 @@ def update_sentiment(ticker, days):
         heatmap_tickers, heatmap_scores = [], []
         for t in TICKERS:
             try:
-                rh = requests.get(f"{API_BASE}/sentiment/{t}",
+                rh = requests.get(f"{API}/sentiment/{t}",
                                   params={"days":7}, headers=HEADERS, timeout=3)
                 if rh.status_code == 200:
                     d = rh.json()

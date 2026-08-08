@@ -1,6 +1,17 @@
+import os
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+os.environ.setdefault("SETUPTOOLS_USE_DISTUTILS", "stdlib")
+try:
+    import _distutils_hack
+
+    _distutils_hack.remove_shim()
+    for _m in [m for m in list(sys.modules) if m == "distutils" or m.startswith("distutils.")]:
+        del sys.modules[_m]
+except Exception:
+    pass
 
 from config.logging_config import get_logger
 import ml.anomaly_detector as anomaly
