@@ -42,8 +42,7 @@ def transform(df: pd.DataFrame, symbol: str) -> list[dict]:
     return df.to_dict(orient="records")
 
 def run():
-    session = get_session()
-    try:
+    with get_session() as session:
         for symbol in TICKERS:
             print(f"[{symbol}] Fetching data...")
             try:
@@ -68,9 +67,6 @@ def run():
 
             # Be polite to the API
             time.sleep(1)
-
-    finally:
-        session.close()
 
 if __name__ == "__main__":
     run()

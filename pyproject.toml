@@ -1,54 +1,16 @@
 [project]
 name = "sentinel"
 version = "0.1.0"
-description = "Financial intelligence platform: real-time data ingestion, anomaly detection, forecasting, and sentiment analytics"
+description = "Add your description here"
 readme = "README.md"
-requires-python = "==3.11.*"
+requires-python = ">=3.11"
 dependencies = [
-    # API
-    "fastapi==0.111.0",
-    "uvicorn[standard]==0.30.0",
-    "python-dotenv==1.0.1",
-    "pydantic==2.7.1",
-    # Database
-    "sqlalchemy==2.0.47",
-    "psycopg2-binary==2.9.9",
-    # Data
-    "pandas==2.2.2",
-    "numpy==1.26.4",
-    "pyarrow>=4.0.0,<16",
-    "yfinance==1.2.0",
-    "ccxt==4.5.40",
-    # ML
-    "scikit-learn==1.4.2",
-    "pyod==1.1.3",
-    "prophet==1.1.5",
-    "xgboost==2.0.3",
-    "scipy==1.13.1",
-    "torch==2.1.0",
-    "transformers==4.40.0",
-    # Dashboard
-    "dash==3.0.4",
-    "plotly==5.22.0",
-    "dash-bootstrap-components==2.0.4",
-    # Utils
-    "requests==2.32.2",
-    "tqdm==4.66.4",
-    "tabulate==0.9.0",
-    # MLflow
-    "mlflow==2.13.0",
-    "supabase>=2.16.0",
+    "dash>=4.4.1",
+    "fastapi>=0.141.1",
+    "uvicorn>=0.52.1",
+    "uvloop>=0.22.1",
+    "watchfiles>=1.2.0",
 ]
 
-[[tool.uv.index]]
-name = "pytorch-cpu"
-url = "https://download.pytorch.org/whl/cpu"
-explicit = true
-
-[tool.uv.sources]
-torch = [
-  { index = "pytorch-cpu" }
-]
-
-[tool.uv]
-index-strategy = "unsafe-best-match"
+[project.scripts]
+stl = "cli.cli.cli"

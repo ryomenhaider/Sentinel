@@ -47,8 +47,7 @@ def transform(raw: list, symbol: str) -> list[dict]:
 
 def run():
     exchange = ccxt.binance()
-    session = get_session()
-    try:
+    with get_session() as session:
         for symbol, name in SYMBOLS.items():
             print(f"[{symbol}] fetching '{name}'....")
             try:
@@ -65,8 +64,6 @@ def run():
             except Exception as e:
                 print(f'[{symbol} Unexpected Error: {e}]')
                 session.rollback()
-    finally:
-        session.close()
 
 
 if __name__ == "__main__":
