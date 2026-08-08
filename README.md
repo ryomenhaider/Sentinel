@@ -1,15 +1,3 @@
----
-title: Sentinel
-emoji: 📊
-colorFrom: blue
-colorTo: purple
-sdk: docker
-app_port: 7860
-sdk_version: "latest"
-python_version: "3.11"
-app_file: dashboard/app.py
-pinned: false
----
 # Sentinel
 
 > **Financial intelligence platform: real-time data ingestion, anomaly detection, time-series forecasting, and news-sentiment analytics, served through a Bloomberg-style dashboard.**
@@ -20,7 +8,7 @@ pinned: false
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-SQLAlchemy-336791)](https://www.postgresql.org/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED)](https://www.docker.com/)
 
-## 🎯 Overview
+## Overview
 
 Sentinel ingests financial data from multiple public sources, engineers features, trains and serves ML models (anomaly detection, forecasting, sentiment), and exposes everything through a REST API and an interactive dashboard. It is built to run as a **single container** (FastAPI serves the API and mounts Dash via WSGI), backed by **any PostgreSQL** — including Supabase's hosted Postgres, which makes it deployable on free-tier platforms with ephemeral storage (e.g. Hugging Face Spaces).
 
@@ -28,39 +16,39 @@ Sentinel ingests financial data from multiple public sources, engineers features
 
 ---
 
-## ✨ Key Features
+## Key Features
 
-### 📈 Data Ingestion
+### Data Ingestion
 - **Multi-source collection:** stocks (yfinance), crypto (CCXT), macro indicators (FRED), financial news (newsdata.io)
 - **Feature engineering:** log returns, lags, rolling stats, RSI, Bollinger %B, volume ratios
 - Pipeline runner with per-stage pass/fail reporting (`ingestion/ingestion_pipeline.py`)
 
-### 🤖 Machine Learning
+### Machine Learning
 - **Anomaly detection** — Isolation Forest + LOF (PyOD), written to DB with severity labels
 - **Time-series forecasting** — Prophet + XGBoost with walk-forward cross-validation (30/90-day horizons)
 - **Sentiment analysis** — FinBERT (Hugging Face `transformers`) scoring news headlines
 - **Portfolio optimization** — risk-constrained weight allocation via scipy
 - **Model tracking** — MLflow registry with metrics, params, and artifacts
 
-### 🚨 MLOps — Drift Detection
+### MLOps — Drift Detection
 - **PSI + Kolmogorov–Smirnov** tests per feature against a rolling baseline
 - Email + Slack alerting on drift
 - CLI runner: `python mlops/drift_detector.py --tickers AAPL,MSFT`
 - (Roadmap: persist drift runs, expose via API, visualize, add Prometheus/Grafana — see [Phase 3](res/PHASE_3_OBSERVABILITY.md))
 
-### 📊 Interactive Dashboard
+### Interactive Dashboard
 - 5 pages: Market Overview, Anomalies, Forecasts, Portfolio, Sentiment
 - Dark "Bloomberg-style" theme (IBM Plex, terminal accents), Plotly candlesticks + KPIs
 - Live API health indicator in the navbar (30s polling)
 
-### 🔌 RESTful API
+### RESTful API
 - OpenAPI/Swagger at `/api/docs`
 - Health check at `/api/health`
 - Routers: prices, anomalies, forecasts, sentiment, portfolio
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
                  ┌──────────────────────────────┐
@@ -88,7 +76,7 @@ No docker-compose, no separate services: one image, one process, one port. Postg
 
 ---
 
-## 🔧 Tech Stack
+## Tech Stack
 
 | Component     | Technology                     |
 |---------------|--------------------------------|
@@ -102,7 +90,7 @@ No docker-compose, no separate services: one image, one process, one port. Postg
 
 ---
 
-## 🚀 Quick Start (local)
+## Quick Start (local)
 
 ```bash
 # 1. Install (uv recommended — pinned in pyproject.toml / uv.lock)
@@ -145,7 +133,7 @@ curl http://localhost:7860/api/health          # {"status":"ok","database":"conn
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 ├── api/                        # FastAPI application
@@ -183,7 +171,7 @@ curl http://localhost:7860/api/health          # {"status":"ok","database":"conn
 
 ---
 
-## 🔌 API Reference
+## API Reference
 
 | Endpoint                     | Description                        |
 |------------------------------|------------------------------------|
@@ -204,7 +192,7 @@ Full interactive docs: `/api/docs`
 
 ---
 
-## ⚙️ Configuration
+## Configuration
 
 All configuration is environment-driven (`config/settings.py`). See `.env.example`.
 
@@ -221,20 +209,19 @@ All configuration is environment-driven (`config/settings.py`). See `.env.exampl
 
 ---
 
-## ⚙️ Orchestration & Scheduling
+## Orchestration & Scheduling
 
 - **Today:** ingestion and training are CLI-driven (`python -m ...`); Airflow DAGs under `airflow/` are **legacy and no longer used** (their dependencies conflict with the pinned stack).
-- **Planned:** lightweight APScheduler inside the app + GitHub Actions cron for cloud scheduling, replacing Airflow entirely — see [Phase 2](res/PHASE_2_SCHEDULER.md).
+- **Planned:** lightweight APScheduler inside the app + GitHub Actions cron for cloud scheduling, replacing Airflow entirely 
+---
+
+## Docker
+
+The `Dockerfile` was removed in the repo cleanup and is recreated, (single container: CPU torch from the PyTorch CPU index, one uvicorn process serving API + dashboard, healthcheck on `/api/health`).
 
 ---
 
-## 🐳 Docker
-
-The `Dockerfile` was removed in the repo cleanup and is recreated in [Phase 5](res/PHASE_5_DEPLOY_HUGGINGFACE.md) (single container: CPU torch from the PyTorch CPU index, one uvicorn process serving API + dashboard, healthcheck on `/api/health`).
-
----
-
-## 🧪 Testing
+## Testing
 
 ```bash
 # Pipelines (each exits non-zero on failure)
@@ -251,19 +238,7 @@ curl http://localhost:7860/api/prices/AAPL/history?limit=5
 
 ---
 
-## 🗺️ Roadmap
-
-| Phase | What | Doc |
-|-------|------|-----|
-| 1 | Migrate to Supabase (hosted Postgres + Auth) | [res/PHASE_1_SUPABASE_MIGRATION.md](res/PHASE_1_SUPABASE_MIGRATION.md) |
-| 2 | Replace Airflow with APScheduler + GitHub Actions | [res/PHASE_2_SCHEDULER.md](res/PHASE_2_SCHEDULER.md) |
-| 3 | Observability: Prometheus + Grafana, drift API | [res/PHASE_3_OBSERVABILITY.md](res/PHASE_3_OBSERVABILITY.md) |
-| 4 | UI: MLOps page, macro endpoint, polish | [res/PHASE_4_UI.md](res/PHASE_4_UI.md) |
-| 5 | Deploy to Hugging Face Spaces | [res/PHASE_5_DEPLOY_HUGGINGFACE.md](res/PHASE_5_DEPLOY_HUGGINGFACE.md) |
-
----
-
-## 📝 Changelog
+## Changelog
 
 ### v0.1.0
 - FastAPI API with 5 routers, Dash dashboard mounted via WSGI
@@ -275,6 +250,6 @@ curl http://localhost:7860/api/prices/AAPL/history?limit=5
 
 ---
 
-**Made with ❤️ for the financial-intelligence portfolio**
+**Made with ❤️**
 
 *For issues or questions, open a GitHub issue.*

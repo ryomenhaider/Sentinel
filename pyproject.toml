@@ -5,20 +5,17 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "ccxt>=4.5.71",
     "dash>=4.4.1",
-    "dash-bootstrap-components>=2.0.4",
-    "dotenv>=0.9.9",
     "fastapi>=0.141.1",
+    "numpy>=2.4.6",
     "pandas>=3.0.5",
-    "plotly>=6.9.0",
-    "psycopg2-binary>=2.9.12",
-    "sqlalchemy>=2.0.51",
     "torch>=2.13.0",
     "transformers>=5.14.1",
-    "typer>=0.27.1",
     "uvicorn>=0.52.1",
     "uvloop>=0.22.1",
     "watchfiles>=1.2.0",
-    "yfinance>=1.5.2",
+    "xgboost>=3.2.0",
 ]
+
+[project.scripts]
+stl = "cli.cli.cli"
