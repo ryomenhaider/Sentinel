@@ -34,7 +34,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://sentinel.vercel.app",  # Update with your actual Vercel URL
+        "https://sentinel-fint.vercel.app",
         "http://localhost:5173",  # Local dev
     ],
     allow_methods=["*"],
