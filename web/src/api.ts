@@ -9,13 +9,14 @@ import type {
 } from './types'
 
 async function get<T>(path: string, params?: Record<string, string | number>): Promise<T> {
-  const url = new URL(path, window.location.origin)
+  const backendUrl = import.meta.env.VITE_API_URL || 'https://sentinel-ggi8.onrender.com'
+  const url = new URL(path, backendUrl)
   if (params) {
     for (const [k, v] of Object.entries(params)) {
       if (v !== undefined && v !== null && v !== '') url.searchParams.set(k, String(v))
     }
   }
-  const res = await fetch(url.pathname + url.search, { headers: { Accept: 'application/json' } })
+  const res = await fetch(url.toString(), { headers: { Accept: 'application/json' } })
   if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
   return res.json() as Promise<T>
 }
