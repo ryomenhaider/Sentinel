@@ -33,7 +33,10 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://sentinel.vercel.app",  # Update with your actual Vercel URL
+        "http://localhost:5173",  # Local dev
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -105,34 +108,29 @@ app.include_router(
     prices_router,
     prefix="/api/prices",
     tags=["Prices"],
-    dependencies=[Depends(verify_jwt)],
 )
 app.include_router(
     anomalies_router,
     prefix="/api/anomalies",
     tags=["Anomalies"],
-    dependencies=[Depends(verify_jwt)],
 )
 app.include_router(
     forecasts_router,
     prefix="/api/forecasts",
     tags=["Forecasts"],
-    dependencies=[Depends(verify_jwt)],
 )
 app.include_router(
     portfolio_router,
     prefix="/api/portfolio",
     tags=["Portfolio"],
-    dependencies=[Depends(verify_jwt)],
 )
 app.include_router(
     sentiment_router,
     prefix="/api/sentiment",
     tags=["Sentiment"],
-    dependencies=[Depends(verify_jwt)],
 )
 app.include_router(
-    job_router, prefix="/api/jobs", tags=["Jobs"], dependencies=[Depends(verify_jwt)]
+    job_router, prefix="/api/jobs", tags=["Jobs"]
 )
 
 
