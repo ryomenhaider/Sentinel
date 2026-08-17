@@ -135,9 +135,7 @@ app.include_router(
     job_router, prefix="/api/jobs", tags=["Jobs"], dependencies=[Depends(verify_jwt)]
 )
 
-from dashboard.app import server as dash_server
 
-app.mount("/", WSGIMiddleware(dash_server))
 
 if __name__ == "__main__":
     uvicorn.run("api.main:app", host="0.0.0.0", port=7860, reload=True)
