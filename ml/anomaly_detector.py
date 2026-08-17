@@ -30,7 +30,7 @@ CONTAMINATION = 0.05  # expect ~5% anomalies
 
 def load_data(ticker: str) -> pd.DataFrame:
     query = """
-             SELECT *
+            SELECT *
             FROM features
             WHERE ticker = :ticker
             ORDER BY date ASC
