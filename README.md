@@ -1,16 +1,19 @@
 # Sentinel
 
-> **Financial intelligence platform: real-time data ingestion, anomaly detection, time-series forecasting, and news-sentiment analytics, served through a Bloomberg-style dashboard.**
+> **Financial intelligence platform: real-time data ingestion, anomaly detection, time-series forecasting, and news-sentiment analytics, served through a React dashboard.**
 
-[![Python](https://img.shields.io/badge/Python-3.11-blue)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/Python-3.12-blue)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688)](https://fastapi.tiangolo.com/)
-[![Dash](https://img.shields.io/badge/Dash-3.0.4-04C8F6)](https://dash.plotly.com/)
+[![React](https://img.shields.io/badge/React-19-61DAFB)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-8-646CFF)](https://vite.dev/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-SQLAlchemy-336791)](https://www.postgresql.org/)
-[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED)](https://www.docker.com/)
 
 ## Overview
 
-Sentinel ingests financial data from multiple public sources, engineers features, trains and serves ML models (anomaly detection, forecasting, sentiment), and exposes everything through a REST API and an interactive dashboard. It is built to run as a **single container** (FastAPI serves the API and mounts Dash via WSGI), backed by **any PostgreSQL** — including Supabase's hosted Postgres, which makes it deployable on free-tier platforms with ephemeral storage (e.g. Hugging Face Spaces).
+Sentinel ingests financial data from multiple public sources, engineers features, trains and serves ML models (anomaly detection, forecasting, sentiment), and exposes everything through a REST API and a React single-page app.
+
+- **Backend** — FastAPI serves the REST API only (no embedded frontend).
+- **Frontend** — a Vite + React + TypeScript SPA in [`web/`](web/) with a dark, Bloomberg-style dashboard (Plotly charts). It calls the API via CORS (dev: `localhost:5173`, prod: Vercel).
 
 **What's real in this repo today:** every pipeline, model, endpoint, and dashboard page listed below runs. See [Roadmap](#-roadmap) for what's next.
 
@@ -36,10 +39,10 @@ Sentinel ingests financial data from multiple public sources, engineers features
 - CLI runner: `python mlops/drift_detector.py --tickers AAPL,MSFT`
 - (Roadmap: persist drift runs, expose via API, visualize, add Prometheus/Grafana — see [Phase 3](res/PHASE_3_OBSERVABILITY.md))
 
-### Interactive Dashboard
+### React Dashboard (`web/`)
 - 5 pages: Market Overview, Anomalies, Forecasts, Portfolio, Sentiment
-- Dark "Bloomberg-style" theme (IBM Plex, terminal accents), Plotly candlesticks + KPIs
-- Live API health indicator in the navbar (30s polling)
+- Dark "Bloomberg-style" theme, Plotly candlesticks + KPIs
+- Vite + React 19 + TypeScript, deployable to any static host (Vercel, Netlify…)
 
 ### RESTful API
 - OpenAPI/Swagger at `/api/docs`
@@ -51,46 +54,49 @@ Sentinel ingests financial data from multiple public sources, engineers features
 ## Architecture
 
 ```
-                 ┌──────────────────────────────┐
-                 │        Single Container      │
-                 │   (uvicorn → FastAPI :7860)  │
-                 │                              │
-  Browser ──────►│  /api/*        FastAPI       │
-                 │               routers        │
-                 │                              │
-                 │  /dashboard/   Dash app      │
-                 │               (WSGIMiddleware)│
-                 └──────────────┬───────────────┘
-                                │
-                 ┌──────────────▼───────────────┐
-                 │   PostgreSQL (SQLAlchemy)    │
-                 │  Supabase / local / managed  │
-                 └──────────────────────────────┘
+┌──────────────┐        ┌───────────────────────────┐
+│   Browser    │        │     FastAPI backend       │
+│              │  CORS  │                           │
+│  React SPA   │◄──────►│  /api/prices              │
+│  (web/,      │  JSON  │  /api/anomalies           │
+│  Vite/Vercel)│        │  /api/forecasts           │
+└──────────────┘        │  /api/sentiment           │
+                        │  /api/portfolio           │
+                        └─────────────┬─────────────┘
+                                      │
+                        ┌─────────────▼─────────────┐
+                        │  PostgreSQL (SQLAlchemy)  │
+                        │  Supabase / local /       │
+                        │  managed                  │
+                        └───────────────────────────┘
 
     Data sources: yfinance · CCXT · FRED · newsdata.io
     ML: PyOD · Prophet · XGBoost · FinBERT · scipy   → MLflow registry
     MLOps: drift detection (PSI + KS) → email/Slack alerts
+    Scheduling: scheduler/ job runner (ingest · features · retrain · drift)
 ```
 
-No docker-compose, no separate services: one image, one process, one port. PostgreSQL is the only external dependency.
+The frontend and API are decoupled: the API is a pure JSON backend, and the SPA can be served from any static host. PostgreSQL is the only external dependency of the backend.
 
 ---
 
 ## Tech Stack
 
-| Component     | Technology                     |
-|---------------|--------------------------------|
-| Backend       | FastAPI 0.111 + uvicorn        |
-| Frontend      | Dash 3.0.4 + Plotly + DBC      |
-| Database      | PostgreSQL via SQLAlchemy 2.0  |
+| Component     | Technology                         |
+|---------------|------------------------------------|
+| Backend       | FastAPI 0.111 + uvicorn            |
+| Frontend      | React 19 + TypeScript + Vite + Plotly |
+| Database      | PostgreSQL via SQLAlchemy 2.0      |
 | ML            | scikit-learn, PyOD, Prophet, XGBoost, scipy |
-| NLP           | FinBERT (`transformers`, CPU)  |
+| NLP           | FinBERT (`transformers`, CPU)      |
 | ML Ops        | MLflow 2.13, PSI/KS drift detection |
-| Python        | 3.11 (pinned)                  |
+| Python        | 3.12 (pinned, `>=3.11,<3.13`)     |
 
 ---
 
-## Quick Start (local)
+## Quick Start
+
+### Backend (API)
 
 ```bash
 # 1. Install (uv recommended — pinned in pyproject.toml / uv.lock)
@@ -117,17 +123,28 @@ python -m ingestion.feature_engineer
 # 5. Train models
 python -m ml.train_pipeline
 
-# 6. Run the app
+# 6. Run the API
 uvicorn api.main:app --host 0.0.0.0 --port 7860
 
 # 7. Verify
 curl http://localhost:7860/api/health          # {"status":"ok","database":"connected",...}
 ```
 
+### Frontend (web/)
+
+```bash
+cd web
+npm install
+npm run dev          # → http://localhost:5173
+npm run build        # production build (dist/)
+```
+
+The frontend calls the API at the URL in `web/.env.production` (`VITE_API_URL`); for local dev, point it at `http://localhost:7860`. The API currently allows CORS origins `http://localhost:5173` and the Vercel deployment (see `api/main.py`).
+
 ### Access
 | Service           | URL                       |
 |-------------------|---------------------------|
-| Dashboard         | http://localhost:7860/dashboard/ |
+| Dashboard (dev)   | http://localhost:5173     |
 | API Docs (Swagger)| http://localhost:7860/api/docs |
 | Health            | http://localhost:7860/api/health |
 
@@ -137,14 +154,13 @@ curl http://localhost:7860/api/health          # {"status":"ok","database":"conn
 
 ```
 ├── api/                        # FastAPI application
-│   ├── main.py                # App factory, CORS, Dash mount, routers
+│   ├── main.py                # App factory, CORS, routers
 │   ├── schemas.py             # Pydantic response models
 │   └── routers/               # prices · anomalies · forecasts · sentiment · portfolio
-├── dashboard/                  # Dash application (mounted at /dashboard/)
-│   ├── app.py                 # Layout, navbar, live status tick
-│   ├── theme.py               # Colors + plot theme (Bloomberg dark)
-│   ├── assets/custom.css
-│   └── pages/                 # overview · anomalies · forecasts · portfolio · sentiment
+├── web/                        # React SPA (Vite + TypeScript + Plotly)
+│   ├── src/pages/             # overview · anomalies · forecasts · portfolio · sentiment
+│   ├── src/api.ts             # API client
+│   └── vite.config.ts
 ├── ingestion/                  # Data collection
 │   ├── price_fetcher.py       # yfinance OHLCV
 │   ├── crypto_fetcher.py      # CCXT
@@ -162,11 +178,13 @@ curl http://localhost:7860/api/health          # {"status":"ok","database":"conn
 │   └── train_pipeline.py      # orchestrated training with metrics
 ├── mlops/
 │   └── drift_detector.py      # PSI + KS drift detection, Slack/email alerts
+├── scheduler/
+│   └── jobs.py                # job runner: ingest · features · retrain · drift
+├── cli/                        # CLI entrypoints
 ├── database/                   # SQLAlchemy models, CRUD, schema.sql + seed_data.sql
 ├── config/                     # settings.py, logging_config.py (JSON logs)
-├── airflow/dags/               # LEGACY Airflow DAGs (retired — see Roadmap)
 ├── res/                        # Roadmap docs (Phase 1–5)
-└── .python-version             # Python 3.11 (uv)
+└── .python-version             # Python 3.12 (uv)
 ```
 
 ---
@@ -202,22 +220,18 @@ All configuration is environment-driven (`config/settings.py`). See `.env.exampl
 | `API_KEYS`          | `service:key,service:key` map              |
 | `FRED_API_KEY`      | FRED macro data                            |
 | `NEWSDATA_API_KEY`  | News ingestion                             |
-| `MLFLOW_URI`        | MLflow tracking URI (default `file:./mlruns` recommended) |
+| `MLFLOW_URI`        | MLflow tracking URI (default `http://localhost:5000`) |
 | `LOG_LEVEL`         | INFO / DEBUG / WARNING                     |
-| `API_BASE_URL`      | Base URL the dashboard uses for API calls  |
-| `DASHBOARD_API_KEY` | Sent with dashboard→API requests           |
+| `DATA_DIR`          | Local data directory (default `./data`)    |
+
+Frontend build-time config lives in `web/.env.production` (`VITE_API_URL`).
 
 ---
 
 ## Orchestration & Scheduling
 
-- **Today:** ingestion and training are CLI-driven (`python -m ...`); Airflow DAGs under `airflow/` are **legacy and no longer used** (their dependencies conflict with the pinned stack).
-- **Planned:** lightweight APScheduler inside the app + GitHub Actions cron for cloud scheduling, replacing Airflow entirely 
----
-
-## Docker
-
-The `Dockerfile` was removed in the repo cleanup and is recreated, (single container: CPU torch from the PyTorch CPU index, one uvicorn process serving API + dashboard, healthcheck on `/api/health`).
+- **Today:** ingestion and training are CLI-driven (`python -m ...`), or run through the job runner: `python -m scheduler.jobs ingest` (also `features`, `retrain`, `drift`).
+- **Planned:** APScheduler inside the app + GitHub Actions cron for cloud scheduling.
 
 ---
 
@@ -228,24 +242,37 @@ The `Dockerfile` was removed in the repo cleanup and is recreated, (single conta
 python -m ingestion.ingestion_pipeline
 python -m ml.train_pipeline
 
+# Scheduled jobs
+python -m scheduler.jobs ingest
+
 # Drift detection CLI
 python mlops/drift_detector.py --tickers AAPL,MSFT --send-alerts
 
 # API smoke checks
 curl http://localhost:7860/api/health
 curl http://localhost:7860/api/prices/AAPL/history?limit=5
+
+# Frontend
+cd web && npm run lint && npm run build
 ```
 
 ---
 
 ## Changelog
 
+### v0.2.0
+- Python 3.12 (was 3.11)
+- Replaced Dash dashboard with a React 19 + Vite + TypeScript SPA (`web/`)
+- API is now a pure JSON backend (Dash/WSGI mount removed); CORS for Vercel + localhost:5173
+- Added `scheduler/` job runner (ingest · features · retrain · drift)
+- Retired Airflow DAGs and the Dockerfile
+
 ### v0.1.0
-- FastAPI API with 5 routers, Dash dashboard mounted via WSGI
+- FastAPI API with 5 routers
 - Ingestion: stocks, crypto, macro, news (FinBERT), feature engineering
 - ML: PyOD anomalies, Prophet+XGBoost forecasts, MVO portfolio, MLflow registry
 - Drift detection (PSI + KS) with email/Slack alerts
-- Single-process architecture: API + dashboard in one app, JSON logging
+- JSON logging
 - Phase 0 hygiene: dependency unification, honest docs, dead code removed
 
 ---
