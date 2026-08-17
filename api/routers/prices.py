@@ -3,7 +3,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from fastapi import APIRouter, HTTPException
-from typing import List
 from config.logging_config import get_logger
 from database.crud import get_latest_prices
 from api.schemas import MarketDataResponse
@@ -12,8 +11,6 @@ from database.connection import get_session
 logger = get_logger(__name__)
 router = APIRouter()
 
-# FIX: /compare MUST be declared before /{ticker} and /{ticker}/history
-# otherwise FastAPI matches "compare" as a ticker value and this route is never reached
 @router.get("/compare")
 async def compare_tickers(tickers: str):
     with get_session() as session:

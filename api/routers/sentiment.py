@@ -12,7 +12,6 @@ from database.connection import get_session
 logger = get_logger(__name__)
 router = APIRouter()
 
-# FIX: /heatmap and /timeline declared BEFORE /{ticker} to prevent route shadowing
 
 @router.get("/heatmap", response_model=dict)
 async def get_sentiment_heatmap():

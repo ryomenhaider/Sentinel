@@ -3,10 +3,8 @@ import time
 import uvicorn
 from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.wsgi import WSGIMiddleware
 from fastapi.responses import HTMLResponse
 
-from api.auth import verify_jwt
 from api.routers.anomalies import router as anomalies_router
 from api.routers.forecasts import router as forecasts_router
 from api.routers.jobs import router as job_router
