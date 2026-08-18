@@ -1,152 +1,159 @@
 # Sentinel
 
-> **Financial intelligence platform: real-time data ingestion, anomaly detection, time-series forecasting, and news-sentiment analytics, served through a React dashboard.**
+> **A financial intelligence platform** — ingests market data, detects anomalies, forecasts prices, and scores news sentiment, all served through a dark, Bloomberg-style React dashboard.
 
 [![Python](https://img.shields.io/badge/Python-3.12-blue)](https://www.python.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688)](https://fastapi.tiangolo.com/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.141+-009688)](https://fastapi.tiangolo.com/)
 [![React](https://img.shields.io/badge/React-19-61DAFB)](https://react.dev/)
 [![Vite](https://img.shields.io/badge/Vite-8-646CFF)](https://vite.dev/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-SQLAlchemy-336791)](https://www.postgresql.org/)
-
-## Overview
-
-Sentinel ingests financial data from multiple public sources, engineers features, trains and serves ML models (anomaly detection, forecasting, sentiment), and exposes everything through a REST API and a React single-page app.
-
-- **Backend** — FastAPI serves the REST API only (no embedded frontend).
-- **Frontend** — a Vite + React + TypeScript SPA in [`web/`](web/) with a dark, Bloomberg-style dashboard (Plotly charts). It calls the API via CORS (dev: `localhost:5173`, prod: Vercel).
-
-**What's real in this repo today:** every pipeline, model, endpoint, and dashboard page listed below runs. See [Roadmap](#-roadmap) for what's next.
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-336791)](https://www.postgresql.org/)
+[![MLflow](https://img.shields.io/badge/MLflow-1.27-0194E2)](https://mlflow.org/)
 
 ---
 
-## Key Features
+## Overview
 
-### Data Ingestion
-- **Multi-source collection:** stocks (yfinance), crypto (CCXT), macro indicators (FRED), financial news (newsdata.io)
-- **Feature engineering:** log returns, lags, rolling stats, RSI, Bollinger %B, volume ratios
-- Pipeline runner with per-stage pass/fail reporting (`ingestion/ingestion_pipeline.py`)
+Sentinel is a full-stack pipeline that turns raw financial data into decisions:
 
-### Machine Learning
-- **Anomaly detection** — Isolation Forest + LOF (PyOD), written to DB with severity labels
-- **Time-series forecasting** — Prophet + XGBoost with walk-forward cross-validation (30/90-day horizons)
-- **Sentiment analysis** — FinBERT (Hugging Face `transformers`) scoring news headlines
-- **Portfolio optimization** — risk-constrained weight allocation via scipy
-- **Model tracking** — MLflow registry with metrics, params, and artifacts
+1. **Ingest** — collect stocks, crypto, macro indicators, and news from public sources.
+2. **Engineer** — build features (returns, lags, rolling stats, RSI, Bollinger %B).
+3. **Model** — train anomaly detection, forecasting, sentiment, and portfolio models.
+4. **Serve** — expose everything through a REST API and a single-page React dashboard.
+5. **Monitor** — track model drift (PSI + KS) and alert via email/Slack.
 
-### MLOps — Drift Detection
-- **PSI + Kolmogorov–Smirnov** tests per feature against a rolling baseline
-- Email + Slack alerting on drift
-- CLI runner: `python mlops/drift_detector.py --tickers AAPL,MSFT`
-- (Roadmap: persist drift runs, expose via API, visualize, add Prometheus/Grafana — see [Phase 3](res/PHASE_3_OBSERVABILITY.md))
+The backend and frontend are fully decoupled: the API is a pure JSON service, and the SPA can be hosted anywhere. **PostgreSQL is the only external dependency of the backend.**
 
-### React Dashboard (`web/`)
-- 5 pages: Market Overview, Anomalies, Forecasts, Portfolio, Sentiment
-- Dark "Bloomberg-style" theme, Plotly candlesticks + KPIs
-- Vite + React 19 + TypeScript, deployable to any static host (Vercel, Netlify…)
+> **Status:** every pipeline, model, endpoint, and dashboard page listed below is implemented and runnable. See [Roadmap](#roadmap) for what's next.
 
-### RESTful API
-- OpenAPI/Swagger at `/api/docs`
-- Health check at `/api/health`
-- Routers: prices, anomalies, forecasts, sentiment, portfolio
+---
+
+## Highlights
+
+| Area | What you get |
+|------|--------------|
+| **Data ingestion** | Stocks (yfinance), crypto (CCXT), macro (FRED), news (newsdata.io); feature engineering; stage-runner with pass/fail reporting |
+| **Anomaly detection** | Isolation Forest + LOF (PyOD), written to DB with severity labels |
+| **Forecasting** | Prophet + XGBoost with walk-forward cross-validation (30/90-day horizons) |
+| **Sentiment analysis** | FinBERT (`transformers`, CPU) scoring news headlines |
+| **Portfolio optimization** | Risk-constrained weight allocation via scipy |
+| **Model tracking** | MLflow registry with metrics, params, and artifacts |
+| **Drift detection** | PSI + Kolmogorov–Smirnov tests vs. a rolling baseline, with email/Slack alerting |
+| **Dashboard** | 5 pages: Market Overview, Anomalies, Forecasts, Portfolio, Sentiment — Plotly charts, KPI cards |
+| **API** | OpenAPI docs at `/api/docs`, health check at `/api/health`, 6 routers |
+| **Automation** | Job runner for `ingest · features · retrain · drift`, plus a `stl` CLI |
 
 ---
 
 ## Architecture
 
 ```
-┌──────────────┐        ┌───────────────────────────┐
-│   Browser    │        │     FastAPI backend       │
-│              │  CORS  │                           │
-│  React SPA   │◄──────►│  /api/prices              │
-│  (web/,      │  JSON  │  /api/anomalies           │
-│  Vite/Vercel)│        │  /api/forecasts           │
-└──────────────┘        │  /api/sentiment           │
-                        │  /api/portfolio           │
-                        └─────────────┬─────────────┘
-                                      │
-                        ┌─────────────▼─────────────┐
-                        │  PostgreSQL (SQLAlchemy)  │
-                        │  Supabase / local /       │
-                        │  managed                  │
-                        └───────────────────────────┘
+┌──────────────┐        ┌───────────────────────────────┐
+│   Browser    │  CORS  │        FastAPI backend        │
+│              │◄──────►│  /api/prices      /api/jobs    │
+│  React SPA   │  JSON  │  /api/anomalies  /api/sentiment│
+│  (web/, Vite)│        │  /api/forecasts  /api/portfolio│
+└──────────────┘        └──────────────┬────────────────┘
+                                       │
+                        ┌──────────────▼────────────────┐
+                        │   PostgreSQL (SQLAlchemy 2.0)  │
+                        │   local · Docker · Supabase    │
+                        └───────────────────────────────┘
 
-    Data sources: yfinance · CCXT · FRED · newsdata.io
-    ML: PyOD · Prophet · XGBoost · FinBERT · scipy   → MLflow registry
-    MLOps: drift detection (PSI + KS) → email/Slack alerts
-    Scheduling: scheduler/ job runner (ingest · features · retrain · drift)
+  Data sources:  yfinance · CCXT · FRED · newsdata.io
+  ML:            PyOD · Prophet · XGBoost · FinBERT · scipy   →  MLflow registry
+  MLOps:         drift detection (PSI + KS)                   →  email / Slack alerts
+  Automation:    scheduler/ job runner · stl CLI
 ```
-
-The frontend and API are decoupled: the API is a pure JSON backend, and the SPA can be served from any static host. PostgreSQL is the only external dependency of the backend.
 
 ---
 
 ## Tech Stack
 
-| Component     | Technology                         |
-|---------------|------------------------------------|
-| Backend       | FastAPI 0.111 + uvicorn            |
-| Frontend      | React 19 + TypeScript + Vite + Plotly |
-| Database      | PostgreSQL via SQLAlchemy 2.0      |
-| ML            | scikit-learn, PyOD, Prophet, XGBoost, scipy |
-| NLP           | FinBERT (`transformers`, CPU)      |
-| ML Ops        | MLflow 2.13, PSI/KS drift detection |
-| Python        | 3.12 (pinned, `>=3.11,<3.13`)     |
+| Component | Technology |
+|-----------|------------|
+| Backend | FastAPI + uvicorn |
+| Frontend | React 19 + TypeScript + Vite 8 + Plotly |
+| Database | PostgreSQL via SQLAlchemy 2.0 |
+| ML | scikit-learn, PyOD, Prophet, XGBoost, scipy |
+| NLP | FinBERT (`transformers`, CPU) |
+| MLOps | MLflow 1.27, PSI/KS drift detection |
+| Python | 3.12 (pinned `>=3.11,<3.13`, uv) |
 
 ---
 
-## Quick Start
+## Getting Started
 
-### Backend (API)
+### 1. Backend (API)
 
 ```bash
-# 1. Install (uv recommended — pinned in pyproject.toml / uv.lock)
+# Install dependencies (uv recommended — pinned in pyproject.toml / uv.lock)
 uv sync
 
-# 2. Configure environment
+# Configure environment
 cp .env.example .env
-#    - DB_URL must point to a reachable PostgreSQL
-#      (local, Docker, or Supabase pooler URL)
+#   DB_URL must point to a reachable PostgreSQL
+#   (local, Docker, or Supabase pooler URL)
 
-# 3. Initialize schema + seed data
-#    Option A — Supabase: paste database/schema.sql then database/seed_data.sql
+# Initialize schema + seed data
+#   Option A — Supabase: paste database/schema.sql then database/seed_data.sql
 #              into the SQL Editor (recommended)
-#    Option B — any Postgres: psql "$DB_URL" -f database/schema.sql && psql "$DB_URL" -f database/seed_data.sql
+#   Option B — any Postgres:
+psql "$DB_URL" -f database/schema.sql && psql "$DB_URL" -f database/seed_data.sql
 
-# 4. Ingest data (see Orchestration for automation)
-python -m ingestion.ingestion_pipeline        # or individually:
-python -m ingestion.price_fetcher
-python -m ingestion.crypto_fetcher
-python -m ingestion.macro_fetcher
-python -m ingestion.news_fetcher
-python -m ingestion.feature_engineer
+# Ingest data (individual fetchers also available, see below)
+python -m ingestion.ingestion_pipeline
 
-# 5. Train models
+# Train models
 python -m ml.train_pipeline
 
-# 6. Run the API
+# Run the API
 uvicorn api.main:app --host 0.0.0.0 --port 7860
 
-# 7. Verify
-curl http://localhost:7860/api/health          # {"status":"ok","database":"connected",...}
+# Verify
+curl http://localhost:7860/api/health
 ```
 
-### Frontend (web/)
+Individual pipeline stages:
+
+```bash
+python -m ingestion.price_fetcher      # stocks  (yfinance)
+python -m ingestion.crypto_fetcher     # crypto  (CCXT)
+python -m ingestion.macro_fetcher      # macro   (FRED)
+python -m ingestion.news_fetcher       # news    (newsdata.io)
+python -m ingestion.feature_engineer   # features
+```
+
+### 2. Frontend (`web/`)
 
 ```bash
 cd web
 npm install
-npm run dev          # → http://localhost:5173
-npm run build        # production build (dist/)
+npm run dev        # → http://localhost:5173
+npm run lint       # oxlint
+npm run build      # production build (dist/)
 ```
 
-The frontend calls the API at the URL in `web/.env.production` (`VITE_API_URL`); for local dev, point it at `http://localhost:7860`. The API currently allows CORS origins `http://localhost:5173` and the Vercel deployment (see `api/main.py`).
+The frontend calls the API at the URL in `web/.env.production` (`VITE_API_URL`); for local dev, point it at `http://localhost:7860`. The API allows CORS from `http://localhost:5173` and the Vercel deployment (see `api/main.py`).
+
+### 3. CLI (`stl`)
+
+The `stl` entrypoint wraps the common workflows:
+
+```bash
+stl ingest        # run the ingestion pipeline
+stl ml-train      # train all models
+stl api-start     # start the API (uvicorn, reload on)
+stl all           # ingest → train → start the API
+```
 
 ### Access
-| Service           | URL                       |
-|-------------------|---------------------------|
-| Dashboard (dev)   | http://localhost:5173     |
-| API Docs (Swagger)| http://localhost:7860/api/docs |
-| Health            | http://localhost:7860/api/health |
+
+| Service | URL |
+|---------|-----|
+| Dashboard (dev) | http://localhost:5173 |
+| API Docs (Swagger) | http://localhost:7860/api/docs |
+| ReDoc | http://localhost:7860/api/redoc |
+| Health | http://localhost:7860/api/health |
 
 ---
 
@@ -154,21 +161,21 @@ The frontend calls the API at the URL in `web/.env.production` (`VITE_API_URL`);
 
 ```
 ├── api/                        # FastAPI application
-│   ├── main.py                # App factory, CORS, routers
+│   ├── main.py                # app factory, CORS, middleware, routers
 │   ├── schemas.py             # Pydantic response models
-│   └── routers/               # prices · anomalies · forecasts · sentiment · portfolio
+│   └── routers/               # prices · anomalies · forecasts · sentiment · portfolio · jobs
 ├── web/                        # React SPA (Vite + TypeScript + Plotly)
 │   ├── src/pages/             # overview · anomalies · forecasts · portfolio · sentiment
 │   ├── src/api.ts             # API client
 │   └── vite.config.ts
-├── ingestion/                  # Data collection
+├── ingestion/                  # data collection + feature engineering
 │   ├── price_fetcher.py       # yfinance OHLCV
 │   ├── crypto_fetcher.py      # CCXT
 │   ├── macro_fetcher.py       # FRED
 │   ├── news_fetcher.py        # newsdata.io + FinBERT sentiment
 │   ├── feature_engineer.py    # RSI, Bollinger, lags, rolling stats
-│   └── ingestion_pipeline.py  # stage runner
-├── ml/                         # Models
+│   └── ingestion_pipeline.py  # stage runner with per-stage reporting
+├── ml/                         # models
 │   ├── anomaly_detector.py    # PyOD IForest + LOF
 │   ├── forecaster.py          # Prophet + XGBoost, walk-forward CV
 │   ├── sentiment_engine.py    # FinBERT scoring
@@ -180,10 +187,11 @@ The frontend calls the API at the URL in `web/.env.production` (`VITE_API_URL`);
 │   └── drift_detector.py      # PSI + KS drift detection, Slack/email alerts
 ├── scheduler/
 │   └── jobs.py                # job runner: ingest · features · retrain · drift
-├── cli/                        # CLI entrypoints
+├── cli/
+│   └── cli.py                 # `stl` Typer CLI
 ├── database/                   # SQLAlchemy models, CRUD, schema.sql + seed_data.sql
 ├── config/                     # settings.py, logging_config.py (JSON logs)
-├── res/                        # Roadmap docs (Phase 1–5)
+├── res/                        # roadmap docs (Phase 1–5)
 └── .python-version             # Python 3.12 (uv)
 ```
 
@@ -191,22 +199,26 @@ The frontend calls the API at the URL in `web/.env.production` (`VITE_API_URL`);
 
 ## API Reference
 
-| Endpoint                     | Description                        |
-|------------------------------|------------------------------------|
-| `GET /api/health`            | App + DB health                     |
-| `GET /api/prices/compare?tickers=AAPL,MSFT` | Latest quotes, multi-asset |
-| `GET /api/prices/{ticker}`   | Latest price                        |
-| `GET /api/prices/{ticker}/history?limit=90` | OHLCV history          |
-| `GET /api/anomalies/detected?ticker=&days=` | Detected anomalies      |
-| `GET /api/anomalies/{ticker}`| Anomalies for one asset             |
-| `GET /api/forecasts/{ticker}?days=30` | Prophet/XGBoost forecast     |
-| `GET /api/forecasts/compare/{ticker}` | Actual vs predicted           |
-| `GET /api/sentiment/heatmap` | Latest sentiment per ticker         |
-| `GET /api/sentiment/timeline?ticker=&days=` | Sentiment history      |
-| `GET /api/portfolio/metrics` | Portfolio metrics                   |
-| `POST /api/portfolio/optimize` | Run optimization                  |
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/health` | App + DB health |
+| GET | `/api/prices/compare?tickers=AAPL,MSFT` | Latest quotes, multi-asset |
+| GET | `/api/prices/{ticker}` | Latest quote for one asset |
+| GET | `/api/prices/{ticker}/history?limit=90` | OHLCV history |
+| GET | `/api/anomalies/latest` | Most recent detected anomaly |
+| GET | `/api/anomalies/?ticker=AAPL&days=30` | Anomalies for one asset |
+| POST | `/api/anomalies/detect/{ticker}` | Run on-demand anomaly detection |
+| GET | `/api/forecasts/{ticker}?horizon=30` | Forecast for one asset |
+| GET | `/api/forecasts/compare?tickers=...&horizon=30` | Forecasts across assets |
+| GET | `/api/forecasts/accuracy` | Forecast accuracy (WIP) |
+| GET | `/api/sentiment/heatmap` | Latest sentiment per ticker |
+| GET | `/api/sentiment/timeline?ticker=&days=` | Sentiment history for an asset |
+| GET | `/api/sentiment/{ticker}?days=` | Sentiment for one asset |
+| GET | `/api/portfolio/weights` | Latest optimized weights |
+| GET | `/api/portfolio/optimize` | Re-run portfolio optimization |
+| GET | `/api/portfolio/backtest` | Backtest (WIP) |
 
-Full interactive docs: `/api/docs`
+Interactive docs: `/api/docs` (Swagger) · `/api/redoc` (ReDoc)
 
 ---
 
@@ -214,15 +226,15 @@ Full interactive docs: `/api/docs`
 
 All configuration is environment-driven (`config/settings.py`). See `.env.example`.
 
-| Variable            | Purpose                                    |
-|---------------------|--------------------------------------------|
-| `DB_URL`            | SQLAlchemy PostgreSQL URL (Supabase-ready) |
-| `API_KEYS`          | `service:key,service:key` map              |
-| `FRED_API_KEY`      | FRED macro data                            |
-| `NEWSDATA_API_KEY`  | News ingestion                             |
-| `MLFLOW_URI`        | MLflow tracking URI (default `http://localhost:5000`) |
-| `LOG_LEVEL`         | INFO / DEBUG / WARNING                     |
-| `DATA_DIR`          | Local data directory (default `./data`)    |
+| Variable | Purpose |
+|----------|---------|
+| `DB_URL` | SQLAlchemy PostgreSQL URL (Supabase-ready) |
+| `API_KEYS` | `service:key,service:key` map |
+| `FRED_API_KEY` | FRED macro data |
+| `NEWSDATA_API_KEY` | News ingestion |
+| `MLFLOW_URI` | MLflow tracking URI (default `http://localhost:5000`) |
+| `LOG_LEVEL` | INFO / DEBUG / WARNING |
+| `DATA_DIR` | Local data directory (default `./data`) |
 
 Frontend build-time config lives in `web/.env.production` (`VITE_API_URL`).
 
@@ -230,8 +242,13 @@ Frontend build-time config lives in `web/.env.production` (`VITE_API_URL`).
 
 ## Orchestration & Scheduling
 
-- **Today:** ingestion and training are CLI-driven (`python -m ...`), or run through the job runner: `python -m scheduler.jobs ingest` (also `features`, `retrain`, `drift`).
-- **Planned:** APScheduler inside the app + GitHub Actions cron for cloud scheduling.
+- **Today:** ingestion and training are CLI-driven (`python -m ...`), or run through the job runner:
+
+  ```bash
+  python -m scheduler.jobs ingest     # also: features · retrain · drift
+  ```
+
+- **Planned:** APScheduler inside the app + GitHub Actions cron for cloud scheduling (see [Phase 2](res/PHASE_2_SCHEDULER.md)).
 
 ---
 
@@ -258,11 +275,23 @@ cd web && npm run lint && npm run build
 
 ---
 
+## Roadmap
+
+The project evolves in documented phases:
+
+- [Phase 1 — Supabase migration](res/PHASE_1_SUPABASE_MIGRATION.md)
+- [Phase 2 — Scheduling](res/PHASE_2_SCHEDULER.md)
+- [Phase 3 — Observability](res/PHASE_3_OBSERVABILITY.md)
+- [Phase 4 — UI](res/PHASE_4_UI.md)
+- [Phase 5 — Deploy to Hugging Face](res/PHASE_5_DEPLOY_HUGGINGFACE.md)
+
+---
+
 ## Changelog
 
 ### v0.2.0
 - Python 3.12 (was 3.11)
-- Replaced Dash dashboard with a React 19 + Vite + TypeScript SPA (`web/`)
+- Replaced the Dash dashboard with a React 19 + Vite + TypeScript SPA (`web/`)
 - API is now a pure JSON backend (Dash/WSGI mount removed); CORS for Vercel + localhost:5173
 - Added `scheduler/` job runner (ingest · features · retrain · drift)
 - Retired Airflow DAGs and the Dockerfile
@@ -276,7 +305,5 @@ cd web && npm run lint && npm run build
 - Phase 0 hygiene: dependency unification, honest docs, dead code removed
 
 ---
-
-**Made with ❤️**
 
 *For issues or questions, open a GitHub issue.*
