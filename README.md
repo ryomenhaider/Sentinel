@@ -1,5 +1,6 @@
 <div align="center">
-# Sentinel
+
+  # Sentinel
 
 > **A financial intelligence platform** — ingests market data, detects anomalies, forecasts prices, and scores news sentiment, all served through a dark, Bloomberg-style React dashboard.
 
