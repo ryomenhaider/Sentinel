@@ -1,3 +1,4 @@
+<div align="center">
 # Sentinel
 
 > **A financial intelligence platform** — ingests market data, detects anomalies, forecasts prices, and scores news sentiment, all served through a dark, Bloomberg-style React dashboard.
@@ -8,7 +9,7 @@
 [![Vite](https://img.shields.io/badge/Vite-8-646CFF)](https://vite.dev/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-336791)](https://www.postgresql.org/)
 [![MLflow](https://img.shields.io/badge/MLflow-1.27-0194E2)](https://mlflow.org/)
-
+</div>
 ---
 
 ## Overview
