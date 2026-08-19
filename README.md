@@ -275,18 +275,6 @@ cd web && npm run lint && npm run build
 
 ---
 
-## Roadmap
-
-The project evolves in documented phases:
-
-- [Phase 1 — Supabase migration](res/PHASE_1_SUPABASE_MIGRATION.md)
-- [Phase 2 — Scheduling](res/PHASE_2_SCHEDULER.md)
-- [Phase 3 — Observability](res/PHASE_3_OBSERVABILITY.md)
-- [Phase 4 — UI](res/PHASE_4_UI.md)
-- [Phase 5 — Deploy to Hugging Face](res/PHASE_5_DEPLOY_HUGGINGFACE.md)
-
----
-
 ## Changelog
 
 ### v0.2.0
