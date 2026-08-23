@@ -1,10 +1,12 @@
 import type {
   AnomalyRow,
+  CompanyFundamental,
   ComparePayload,
   ForecastRow,
   HealthStatus,
   PriceRow,
   SentimentRow,
+  TechnicalSnapshot,
   WeightRow,
 } from './types'
 
@@ -34,4 +36,8 @@ export const api = {
   weights: () => get<WeightRow[]>(`/api/portfolio/weights`),
   sentiment: (ticker: string, days: number) =>
     get<SentimentRow[]>(`/api/sentiment/${ticker}`, { days }),
+  technical: (symbol: string) =>
+    get<TechnicalSnapshot>(`/api/v1/analysis/technical/${symbol}`),
+  fundamental: (ticker: string) =>
+    get<CompanyFundamental>(`/api/v1/analysis/fundamental/${ticker}`),
 }
