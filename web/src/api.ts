@@ -2,8 +2,10 @@ import type {
   AnomalyRow,
   CompanyFundamental,
   ComparePayload,
+  FeatureImportance,
   ForecastRow,
   HealthStatus,
+  ModelVersion,
   PriceRow,
   SentimentRow,
   TechnicalSnapshot,
@@ -42,4 +44,7 @@ export const api = {
     get<TechnicalSnapshot>(`/api/v1/analysis/technical/${symbol}`),
   fundamental: (ticker: string) =>
     get<CompanyFundamental>(`/api/v1/analysis/fundamental/${ticker}`),
+  explain: (ticker: string) =>
+    get<FeatureImportance[]>(`/api/v1/forecasts/${ticker}/explain`),
+  models: () => get<ModelVersion[]>(`/api/v1/forecasts/models`),
 }

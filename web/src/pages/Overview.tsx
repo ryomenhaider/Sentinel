@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Data, Layout } from 'plotly.js'
+import { Download } from 'lucide-react'
 import { api } from '../api'
 import type { PriceRow } from '../types'
 import { COLORS, MONO, PLOT_BASE } from '../theme'
 import PlotView from '../components/Plot'
+import { exportToCSV } from '../utils/export'
 import {
   Badge,
   Card,
@@ -36,7 +38,6 @@ export default function Overview() {
   const [days, setDays] = useState('90')
   const [rows, setRows] = useState<PriceRow[] | null>(null)
   const [movers, setMovers] = useState<{ t: string; c: number; chg: number }[]>([])
-  const [updated, setUpdated] = useState('')
   const [error, setError] = useState(false)
   const [tick, setTick] = useState(0)
 
@@ -50,7 +51,6 @@ export default function Overview() {
       const data = await api.priceHistory(ticker, Number(days))
       setRows(data)
       setError(false)
-      setUpdated(new Date().toISOString())
     } catch {
       setRows(null)
       setError(true)
@@ -223,6 +223,17 @@ export default function Overview() {
     }
   }, [rows, ticker, days])
 
+  const latestDataDate = useMemo(() => {
+    if (!rows || rows.length === 0) return null
+    return rows.reduce((max, r) => (r.date > max ? r.date : max), rows[0].date)
+  }, [rows])
+
+  const isDataFresh = useMemo(() => {
+    if (!latestDataDate) return false
+    const diffHours = (Date.now() - new Date(latestDataDate).getTime()) / (1000 * 60 * 60)
+    return diffHours < 48
+  }, [latestDataDate])
+
   const loading = rows === null && !error
 
   return (
@@ -245,7 +256,7 @@ export default function Overview() {
         }
       />
 
-      {updated && !loading && (
+      {latestDataDate && !loading && (
         <div
           style={{
             fontFamily: MONO,
@@ -264,11 +275,11 @@ export default function Overview() {
               width: '5px',
               height: '5px',
               borderRadius: '50%',
-              background: COLORS.green,
+              background: isDataFresh ? COLORS.green : COLORS.amber,
               display: 'inline-block',
             }}
           />
-          Updated {updated.slice(11, 16)} UTC
+          Data as of {new Date(latestDataDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
         </div>
       )}
 
@@ -320,7 +331,30 @@ export default function Overview() {
             <Card title="MACRO INDICATORS" style={{ flex: '1' }}>
               <EmptyState title="Macro feed not configured" hint="Add a /macro endpoint to the FastAPI service to populate macro indicators here." />
             </Card>
-            <Card title="TOP MOVERS — 24H" style={{ width: '360px', flex: 'none' }}>
+            <Card
+              title="TOP MOVERS — 24H"
+              style={{ width: '360px', flex: 'none' }}
+              headerRight={
+                movers.length > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => exportToCSV(movers.map(m => ({ ticker: m.t, price: m.c, change: m.chg })), 'movers', [
+                      { key: 'ticker', label: 'Ticker' },
+                      { key: 'price', label: 'Price' },
+                      { key: 'change', label: 'Change %' },
+                    ])}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '4px',
+                      background: 'none', border: `1px solid ${COLORS.border}`, borderRadius: '4px',
+                      padding: '3px 7px', cursor: 'pointer', fontFamily: MONO, fontSize: '8px',
+                      color: COLORS.dim, letterSpacing: '0.8px',
+                    }}
+                  >
+                    <Download size={9} /> CSV
+                  </button>
+                ) : undefined
+              }
+            >
               <DataTable
                 maxHeight={268}
                 headers={['TICKER', 'PRICE', 'CHG %']}

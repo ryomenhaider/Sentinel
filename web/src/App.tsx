@@ -1,14 +1,18 @@
-import { useEffect } from 'react'
+import { Suspense, lazy, useEffect } from 'react'
 import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom'
 import Navbar from './components/Navbar'
-import Overview from './pages/Overview'
-import Anomalies from './pages/Anomalies'
-import Forecasts from './pages/Forecasts'
-import Portfolio from './pages/Portfolio'
-import Sentiment from './pages/Sentiment'
-import Technical from './pages/Technical'
-import Fundamental from './pages/Fundamental'
+import { ErrorBoundary } from './components/ErrorBoundary'
+import { AlertToast } from './components/AlertToast'
+import { Spinner } from './components/ui'
 import { COLORS, SANS } from './theme'
+
+const Overview = lazy(() => import('./pages/Overview'))
+const Anomalies = lazy(() => import('./pages/Anomalies'))
+const Forecasts = lazy(() => import('./pages/Forecasts'))
+const Portfolio = lazy(() => import('./pages/Portfolio'))
+const Sentiment = lazy(() => import('./pages/Sentiment'))
+const Technical = lazy(() => import('./pages/Technical'))
+const Fundamental = lazy(() => import('./pages/Fundamental'))
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -27,15 +31,19 @@ function Content() {
         className="page-enter"
         style={{ maxWidth: '1440px', margin: '0 auto' }}
       >
-        <Routes>
-          <Route path="/" element={<Overview />} />
-          <Route path="/anomalies" element={<Anomalies />} />
-          <Route path="/forecasts" element={<Forecasts />} />
-          <Route path="/portfolio" element={<Portfolio />} />
-          <Route path="/sentiment" element={<Sentiment />} />
-          <Route path="/technical" element={<Technical />} />
-          <Route path="/fundamental" element={<Fundamental />} />
-        </Routes>
+        <ErrorBoundary>
+          <Suspense fallback={<Spinner />}>
+            <Routes>
+              <Route path="/" element={<Overview />} />
+              <Route path="/anomalies" element={<Anomalies />} />
+              <Route path="/forecasts" element={<Forecasts />} />
+              <Route path="/portfolio" element={<Portfolio />} />
+              <Route path="/sentiment" element={<Sentiment />} />
+              <Route path="/technical" element={<Technical />} />
+              <Route path="/fundamental" element={<Fundamental />} />
+            </Routes>
+          </Suspense>
+        </ErrorBoundary>
       </div>
     </main>
   )
@@ -45,6 +53,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
+      <AlertToast />
       <div
         className="app-shell"
         style={{

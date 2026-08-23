@@ -17,4 +17,3 @@ hr = Hermes(
     finnhub_api=FINNHUB_API,
     cache_dir='./raw',
 )
-
