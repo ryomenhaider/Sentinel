@@ -36,10 +36,12 @@ The backend and frontend are fully decoupled: the API is a pure JSON service, an
 | **Forecasting** | Prophet + XGBoost with walk-forward cross-validation (30/90-day horizons) |
 | **Sentiment analysis** | FinBERT (`transformers`, CPU) scoring news headlines |
 | **Portfolio optimization** | Risk-constrained weight allocation via scipy |
+| **Technical analysis** | Real-time crypto technicals: RSI, MACD, Bollinger, ATR, funding rate, open interest, composite scores |
+| **Fundamental analysis** | Stock fundamentals: income, balance sheet, cash flow, valuation ratios, earnings estimates, macro indicators |
 | **Model tracking** | MLflow registry with metrics, params, and artifacts |
 | **Drift detection** | PSI + Kolmogorov–Smirnov tests vs. a rolling baseline, with email/Slack alerting |
-| **Dashboard** | 5 pages: Market Overview, Anomalies, Forecasts, Portfolio, Sentiment — Plotly charts, KPI cards |
-| **API** | OpenAPI docs at `/api/docs`, health check at `/api/health`, 6 routers |
+| **Dashboard** | 7 pages: Market Overview, Anomalies, Forecasts, Technical, Fundamental, Portfolio, Sentiment — Plotly charts, KPI cards |
+| **API** | OpenAPI docs at `/api/docs`, health check at `/api/health`, 7 routers |
 | **Automation** | Job runner for `ingest · features · retrain · drift`, plus a `stl` CLI |
 
 ---
@@ -47,12 +49,13 @@ The backend and frontend are fully decoupled: the API is a pure JSON service, an
 ## Architecture
 
 ```
-┌──────────────┐        ┌───────────────────────────────┐
-│   Browser    │  CORS  │        FastAPI backend        │
-│              │◄──────►│  /api/prices      /api/jobs    │
-│  React SPA   │  JSON  │  /api/anomalies  /api/sentiment│
-│  (web/, Vite)│        │  /api/forecasts  /api/portfolio│
-└──────────────┘        └──────────────┬────────────────┘
+┌──────────────┐        ┌──────────────────────────────────────┐
+│   Browser    │  CORS  │           FastAPI backend             │
+│              │◄──────►│  /api/v1/prices      /api/v1/jobs     │
+│  React SPA   │  JSON  │  /api/v1/anomalies   /api/v1/sentiment│
+│  (web/, Vite)│        │  /api/v1/forecasts   /api/v1/portfolio│
+│  7 pages     │        │  /api/v1/analysis                     │
+└──────────────┘        └──────────────┬───────────────────────┘
                                        │
                         ┌──────────────▼────────────────┐
                         │   PostgreSQL (SQLAlchemy 2.0)  │
@@ -133,7 +136,7 @@ npm run lint       # oxlint
 npm run build      # production build (dist/)
 ```
 
-The frontend calls the API at the URL in `web/.env.production` (`VITE_API_URL`); for local dev, point it at `http://localhost:7860`. The API allows CORS from `http://localhost:5173` and the Vercel deployment (see `api/main.py`).
+The frontend calls the API at the URL in `web/.env.production` (`VITE_API_URL`); for local dev, Vite proxies `/api/*` to `http://localhost:7860`. CORS is open (`allow_origins=["*"]`) — safe since the API serves public data with no auth.
 
 ### 3. CLI (`stl`)
 
@@ -151,8 +154,8 @@ stl all           # ingest → train → start the API
 | Service | URL |
 |---------|-----|
 | Dashboard (dev) | http://localhost:5173 |
-| API Docs (Swagger) | http://localhost:7860/api/docs |
-| ReDoc | http://localhost:7860/api/redoc |
+| API Docs (Swagger) | http://localhost:7860/api/v1/docs |
+| ReDoc | http://localhost:7860/api/v1/redoc |
 | Health | http://localhost:7860/api/health |
 
 ---
@@ -163,10 +166,11 @@ stl all           # ingest → train → start the API
 ├── api/                        # FastAPI application
 │   ├── main.py                # app factory, CORS, middleware, routers
 │   ├── schemas.py             # Pydantic response models
-│   └── routers/               # prices · anomalies · forecasts · sentiment · portfolio · jobs
+│   └── routers/               # prices · anomalies · forecasts · sentiment · portfolio · jobs · analysis
 ├── web/                        # React SPA (Vite + TypeScript + Plotly)
-│   ├── src/pages/             # overview · anomalies · forecasts · portfolio · sentiment
-│   ├── src/api.ts             # API client
+│   ├── src/pages/             # overview · anomalies · forecasts · technical · fundamental · portfolio · sentiment
+│   ├── src/components/        # Navbar, UI primitives, Plot wrapper
+│   ├── src/api.ts             # API client (dev proxy-aware)
 │   └── vite.config.ts
 ├── ingestion/                  # data collection + feature engineering
 │   ├── price_fetcher.py       # yfinance OHLCV
@@ -202,21 +206,23 @@ stl all           # ingest → train → start the API
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/health` | App + DB health |
-| GET | `/api/prices/compare?tickers=AAPL,MSFT` | Latest quotes, multi-asset |
-| GET | `/api/prices/{ticker}` | Latest quote for one asset |
-| GET | `/api/prices/{ticker}/history?limit=90` | OHLCV history |
-| GET | `/api/anomalies/latest` | Most recent detected anomaly |
-| GET | `/api/anomalies/?ticker=AAPL&days=30` | Anomalies for one asset |
-| POST | `/api/anomalies/detect/{ticker}` | Run on-demand anomaly detection |
-| GET | `/api/forecasts/{ticker}?horizon=30` | Forecast for one asset |
-| GET | `/api/forecasts/compare?tickers=...&horizon=30` | Forecasts across assets |
-| GET | `/api/forecasts/accuracy` | Forecast accuracy (WIP) |
-| GET | `/api/sentiment/heatmap` | Latest sentiment per ticker |
-| GET | `/api/sentiment/timeline?ticker=&days=` | Sentiment history for an asset |
-| GET | `/api/sentiment/{ticker}?days=` | Sentiment for one asset |
-| GET | `/api/portfolio/weights` | Latest optimized weights |
-| GET | `/api/portfolio/optimize` | Re-run portfolio optimization |
-| GET | `/api/portfolio/backtest` | Backtest (WIP) |
+| GET | `/api/v1/prices/compare?tickers=AAPL,MSFT` | Latest quotes, multi-asset |
+| GET | `/api/v1/prices/{ticker}` | Latest quote for one asset |
+| GET | `/api/v1/prices/{ticker}/history?limit=90` | OHLCV history |
+| GET | `/api/v1/anomalies/latest` | Most recent detected anomaly |
+| GET | `/api/v1/anomalies/?ticker=AAPL&days=30` | Anomalies for one asset |
+| POST | `/api/v1/anomalies/detect/{ticker}` | Run on-demand anomaly detection |
+| GET | `/api/v1/forecasts/{ticker}?horizon=30` | Forecast for one asset |
+| GET | `/api/v1/forecasts/compare?tickers=...&horizon=30` | Forecasts across assets |
+| GET | `/api/v1/forecasts/accuracy` | Forecast accuracy (WIP) |
+| GET | `/api/v1/sentiment/heatmap` | Latest sentiment per ticker |
+| GET | `/api/v1/sentiment/timeline?ticker=&days=` | Sentiment history for an asset |
+| GET | `/api/v1/sentiment/{ticker}?days=` | Sentiment for one asset |
+| GET | `/api/v1/portfolio/weights` | Latest optimized weights |
+| GET | `/api/v1/portfolio/optimize` | Re-run portfolio optimization |
+| GET | `/api/v1/portfolio/backtest` | Backtest (WIP) |
+| GET | `/api/v1/analysis/technical/{symbol}` | Crypto technical snapshot (BTCUSDT, ETHUSDT, …) |
+| GET | `/api/v1/analysis/fundamental/{ticker}` | Stock fundamental snapshot (NVDA, AAPL, …) |
 
 Interactive docs: `/api/docs` (Swagger) · `/api/redoc` (ReDoc)
 
@@ -236,7 +242,7 @@ All configuration is environment-driven (`config/settings.py`). See `.env.exampl
 | `LOG_LEVEL` | INFO / DEBUG / WARNING |
 | `DATA_DIR` | Local data directory (default `./data`) |
 
-Frontend build-time config lives in `web/.env.production` (`VITE_API_URL`).
+Frontend build-time config lives in `web/.env.production` (`VITE_API_URL`). In dev mode, requests are proxied through Vite to the backend automatically.
 
 ---
 
@@ -289,10 +295,18 @@ The project evolves in documented phases:
 
 ## Changelog
 
+### v0.3.0
+- Added Technical Analysis page (crypto technicals: RSI, MACD, Bollinger, ATR, funding/OI, composite scores)
+- Added Fundamental Analysis page (stock fundamentals: income, balance sheet, cash flow, valuation, earnings, macro indicators)
+- Sidebar wake-up button with 60s countdown (for Render free-tier cold starts)
+- CORS opened to `allow_origins=["*"]` (public data API, no auth)
+- Frontend API client uses Vite proxy in dev mode (no CORS issues locally)
+- Unified all API paths under `/api/v1/`
+
 ### v0.2.0
 - Python 3.12 (was 3.11)
 - Replaced the Dash dashboard with a React 19 + Vite + TypeScript SPA (`web/`)
-- API is now a pure JSON backend (Dash/WSGI mount removed); CORS for Vercel + localhost:5173
+- API is now a pure JSON backend (Dash/WSGI mount removed); CORS for all origins
 - Added `scheduler/` job runner (ingest · features · retrain · drift)
 - Retired Airflow DAGs and the Dockerfile
 
