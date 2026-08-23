@@ -6,6 +6,8 @@ import Anomalies from './pages/Anomalies'
 import Forecasts from './pages/Forecasts'
 import Portfolio from './pages/Portfolio'
 import Sentiment from './pages/Sentiment'
+import Technical from './pages/Technical'
+import Fundamental from './pages/Fundamental'
 import { COLORS, SANS } from './theme'
 
 function ScrollToTop() {
@@ -31,6 +33,8 @@ function Content() {
           <Route path="/forecasts" element={<Forecasts />} />
           <Route path="/portfolio" element={<Portfolio />} />
           <Route path="/sentiment" element={<Sentiment />} />
+          <Route path="/technical" element={<Technical />} />
+          <Route path="/fundamental" element={<Fundamental />} />
         </Routes>
       </div>
     </main>
