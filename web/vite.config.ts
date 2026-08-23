@@ -20,5 +20,16 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('plotly.js-dist-min') || id.includes('react-plotly.js')) {
+              return 'plotly'
+            }
+          },
+        },
+      },
+    },
   }
 })

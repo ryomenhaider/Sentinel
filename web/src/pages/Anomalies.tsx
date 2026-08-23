@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { Data, Layout } from 'plotly.js'
+import { Download } from 'lucide-react'
 import { api } from '../api'
 import type { AnomalyRow, PriceRow } from '../types'
 import { COLORS, MONO, PLOT_BASE } from '../theme'
 import PlotView from '../components/Plot'
+import { exportToCSV } from '../utils/export'
 import {
   Badge,
   Card,
@@ -79,6 +81,11 @@ export default function Anomalies() {
   }
 
   useEffect(load, [ticker, days])
+
+  const latestDataDate = useMemo(() => {
+    if (!prices || prices.length === 0) return null
+    return prices.reduce((max, r) => (r.date > max ? r.date : max), prices[0].date)
+  }, [prices])
 
   const { priceData, priceLayout, scoreData, scoreLayout, events, total, highs, avg } =
     useMemo(() => {
@@ -199,6 +206,19 @@ export default function Anomalies() {
 
   return (
     <div>
+      {latestDataDate && !loading && (
+        <div style={{
+          fontFamily: MONO, fontSize: '9px', color: COLORS.dim, marginTop: '-4px',
+          marginBottom: '12px', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '6px',
+        }}>
+          <span style={{
+            width: '5px', height: '5px', borderRadius: '50%', display: 'inline-block',
+            background: (Date.now() - new Date(latestDataDate).getTime()) < 48 * 3600_000 ? COLORS.green : COLORS.amber,
+          }} />
+          Data as of {new Date(latestDataDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+        </div>
+      )}
+
       <PageHeader
         eyebrow="ANALYSIS"
         title="ANOMALY INTELLIGENCE"
@@ -251,7 +271,36 @@ export default function Anomalies() {
             <PlotView data={scoreData} layout={scoreLayout} />
           )}
         </Card>
-        <Card title="FLAGGED EVENTS" style={{ width: '440px', flex: 'none' }}>
+        <Card
+          title="FLAGGED EVENTS"
+          style={{ width: '440px', flex: 'none' }}
+          headerRight={
+            events.length > 0 ? (
+              <button
+                type="button"
+                onClick={() => exportToCSV(events.map(r => ({
+                  timestamp: r.date ?? r.created_at ?? '',
+                  model: r.model_used ?? '',
+                  severity: r.severity ?? '',
+                  score: r.anomaly_score ?? 0,
+                })), 'anomalies', [
+                  { key: 'timestamp', label: 'Timestamp' },
+                  { key: 'model', label: 'Model' },
+                  { key: 'severity', label: 'Severity' },
+                  { key: 'score', label: 'Score' },
+                ])}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '4px',
+                  background: 'none', border: `1px solid ${COLORS.border}`, borderRadius: '4px',
+                  padding: '3px 7px', cursor: 'pointer', fontFamily: MONO, fontSize: '8px',
+                  color: COLORS.dim, letterSpacing: '0.8px',
+                }}
+              >
+                <Download size={9} /> CSV
+              </button>
+            ) : undefined
+          }
+        >
           {loading ? (
             <Skeleton height={240} radius={8} />
           ) : events.length === 0 ? (

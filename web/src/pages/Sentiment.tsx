@@ -88,6 +88,11 @@ export default function Sentiment() {
     }
   }, [ticker, days])
 
+  const latestDataDate = useMemo(() => {
+    if (rows.length === 0) return null
+    return rows.reduce((max, r) => (r.published_at > max ? r.published_at : max), rows[0].published_at)
+  }, [rows])
+
   const { timelineData, timelineLayout, gaugeValue, gaugeColor, gaugeLayout, heatData, heatLayout, news, kpis } =
     useMemo(() => {
       const timelineData: Data[] = []
@@ -222,6 +227,19 @@ export default function Sentiment() {
 
   return (
     <div>
+      {latestDataDate && !loading && (
+        <div style={{
+          fontFamily: MONO, fontSize: '9px', color: COLORS.dim, marginTop: '-4px',
+          marginBottom: '12px', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '6px',
+        }}>
+          <span style={{
+            width: '5px', height: '5px', borderRadius: '50%', display: 'inline-block',
+            background: (Date.now() - new Date(latestDataDate).getTime()) < 48 * 3600_000 ? COLORS.green : COLORS.amber,
+          }} />
+          Data as of {new Date(latestDataDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+        </div>
+      )}
+
       <PageHeader
         eyebrow="STRATEGY"
         title="SENTIMENT ANALYSIS"

@@ -46,11 +46,12 @@ function useHealth() {
         if (cancelled) return
         if (r.ok) {
           const j = await r.json().catch(() => null)
-          setStatus({
-            label: 'LIVE',
-            color: COLORS.green,
-            version: j?.version ?? undefined,
-          })
+          const dbStatus = j?.database
+          if (dbStatus === 'unreachable' || j?.status === 'degraded') {
+            setStatus({ label: 'DEGRADED', color: COLORS.amber, version: j?.version ?? undefined })
+          } else {
+            setStatus({ label: 'LIVE', color: COLORS.green, version: j?.version ?? undefined })
+          }
         } else {
           setStatus({ label: 'DEGRADED', color: COLORS.amber })
         }
@@ -140,7 +141,7 @@ export function Navbar() {
         </nav>
 
         <div style={{ marginTop: 'auto' }}>
-          {health.color === COLORS.red && (
+          {(health.color === COLORS.red || health.color === COLORS.amber) && (
             <button
               type="button"
               onClick={wakeUp}

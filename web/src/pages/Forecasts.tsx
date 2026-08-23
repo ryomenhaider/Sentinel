@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { Data, Layout } from 'plotly.js'
 import { api } from '../api'
-import type { ForecastRow, PriceRow } from '../types'
+import type { FeatureImportance, ForecastRow, ModelVersion, PriceRow } from '../types'
 import { COLORS, MONO, PLOT_BASE } from '../theme'
 import PlotView from '../components/Plot'
 import {
+  Badge,
   Button,
   Card,
   DataTable,
+  EmptyState,
   ErrorState,
   Input,
   PageHeader,
@@ -45,6 +47,16 @@ export default function Forecasts() {
   const [compareInput, setCompareInput] = useState('')
   const [comparePayload, setComparePayload] = useState<Record<string, ForecastRow[] | ForecastRow> | null>(null)
   const [compareBusy, setCompareBusy] = useState(false)
+  const [featureImportance, setFeatureImportance] = useState<FeatureImportance[]>([])
+  const [models, setModels] = useState<ModelVersion[]>([])
+
+  useEffect(() => {
+    api.models().then(setModels).catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    api.explain(ticker).then(setFeatureImportance).catch(() => setFeatureImportance([]))
+  }, [ticker])
 
   useEffect(() => {
     let cancelled = false
@@ -90,6 +102,11 @@ export default function Forecasts() {
       setCompareBusy(false)
     }
   }
+
+  const latestDataDate = useMemo(() => {
+    if (hist.length === 0) return null
+    return hist.reduce((max, r) => (r.date > max ? r.date : max), hist[0].date)
+  }, [hist])
 
   const { chartData, chartLayout, tableRows, latest, upper, lower, model } = useMemo(() => {
     const deduped = dedupe(fc)
@@ -219,6 +236,19 @@ export default function Forecasts() {
         MODEL PREDICTIONS ONLY — NOT INVESTMENT ADVICE
       </div>
 
+      {latestDataDate && !loading && (
+        <div style={{
+          fontFamily: MONO, fontSize: '9px', color: COLORS.dim, marginTop: '-12px',
+          marginBottom: '12px', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '6px',
+        }}>
+          <span style={{
+            width: '5px', height: '5px', borderRadius: '50%', display: 'inline-block',
+            background: (Date.now() - new Date(latestDataDate).getTime()) < 48 * 3600_000 ? COLORS.green : COLORS.amber,
+          }} />
+          Data as of {new Date(latestDataDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+        </div>
+      )}
+
       <PageHeader
         eyebrow="ANALYSIS"
         title="FORECASTING CENTER"
@@ -293,6 +323,67 @@ export default function Forecasts() {
           />
         )}
       </Card>
+
+      <div style={{ display: 'flex', gap: '16px', marginTop: '16px', flexWrap: 'wrap' }}>
+        <Card title="FEATURE IMPORTANCE" style={{ flex: '1' }}>
+          {featureImportance.length === 0 ? (
+            <EmptyState title="No explainability data" hint="Run the training pipeline to generate SHAP values." />
+          ) : (
+            <PlotView
+              data={[{
+                type: 'bar',
+                x: featureImportance.map((f) => f.importance),
+                y: featureImportance.map((f) => f.feature),
+                orientation: 'h',
+                marker: { color: COLORS.blue, opacity: 0.8 },
+              }]}
+              layout={{
+                ...PLOT_BASE,
+                height: Math.max(250, featureImportance.length * 28),
+                xaxis: { ...(PLOT_BASE.xaxis as object), title: { text: 'Importance', font: { size: 10, color: COLORS.dim } } },
+                yaxis: { ...(PLOT_BASE.yaxis as object), autorange: 'reversed' },
+                margin: { l: 130, r: 20, t: 10, b: 40 },
+                title: undefined,
+              }}
+              title="feature-importance"
+            />
+          )}
+        </Card>
+
+        <Card title="MODEL REGISTRY" style={{ width: '320px', flex: 'none' }}>
+          {models.length === 0 ? (
+            <EmptyState title="No models registered" hint="Train models to populate the registry." />
+          ) : (
+            <div style={{ maxHeight: '340px', overflowY: 'auto' }}>
+              {models.map((m) => (
+                <div
+                  key={`${m.name}-v${m.version}`}
+                  style={{
+                    padding: '10px 12px',
+                    borderBottom: `1px solid ${COLORS.border}40`,
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                  }}
+                >
+                  <div>
+                    <div style={{ fontFamily: MONO, fontSize: '11px', color: COLORS.text, fontWeight: 500 }}>
+                      {m.name}
+                    </div>
+                    <div style={{ fontFamily: MONO, fontSize: '9px', color: COLORS.dim, marginTop: '2px' }}>
+                      {m.stage} · {new Date(m.created_at * 1000).toLocaleDateString()}
+                    </div>
+                  </div>
+                  <Badge
+                    text={`v${m.version}`}
+                    color={m.stage === 'Production' ? COLORS.green : m.stage === 'Staging' ? COLORS.amber : COLORS.dim}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+      </div>
     </div>
   )
 }

@@ -188,3 +188,30 @@ export interface CompanyFundamental {
   ROA: number | null
   'Debt/Equity': number | null
 }
+
+export interface FeatureImportance {
+  feature: string
+  importance: number
+}
+
+export interface ModelVersion {
+  name: string
+  version: string
+  stage: string
+  created_at: number
+  metrics: Record<string, number>
+  description: string
+}
+
+export interface BacktestResult {
+  backtest_id: string
+  summary: {
+    total_return: number
+    annualized_return: number
+    sharpe_ratio: number
+    max_drawdown: number
+    volatility: number
+    win_rate: number
+  }
+  equity_curve: { date: string; value: number }[]
+}
