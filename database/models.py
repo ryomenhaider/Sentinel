@@ -127,8 +127,8 @@ class CompanyFundamental(Base):
     __tablename__ = "company_fundamentals"
 
     # Filing metadata
-    symbol = Column(Text, primary_key=True, nullable=False)
-    filing_date = Column(Date, primary_key=True, nullable=False)
+    ticker = Column(Text, primary_key=True, nullable=True)
+    filing_date = Column(Date, primary_key=True, nullable=True)
     fiscal_period = Column(Text, nullable=False)
     fiscal_year = Column(Integer, nullable=False)
     filing_type = Column(Text, nullable=False)

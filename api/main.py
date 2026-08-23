@@ -11,6 +11,8 @@ from api.routers.jobs import router as job_router
 from api.routers.portfolio import router as portfolio_router
 from api.routers.prices import router as prices_router
 from api.routers.sentiment import router as sentiment_router
+from api.routers.analysis import router as analysis_router
+
 from config.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -25,8 +27,8 @@ app = FastAPI(
         """
     ),
     version="0.1.0",
-    docs_url="/api/docs",
-    redoc_url="/api/redoc",
+    docs_url="/api/v1/docs",
+    redoc_url="/api/v1/redoc",
 )
 
 app.add_middleware(
@@ -104,34 +106,38 @@ async def health():
 
 app.include_router(
     prices_router,
-    prefix="/api/prices",
+    prefix="/api/v1/prices",
     tags=["Prices"],
 )
 app.include_router(
     anomalies_router,
-    prefix="/api/anomalies",
+    prefix="/api/v1/anomalies",
     tags=["Anomalies"],
 )
 app.include_router(
     forecasts_router,
-    prefix="/api/forecasts",
+    prefix="/api/v1/forecasts",
     tags=["Forecasts"],
 )
 app.include_router(
     portfolio_router,
-    prefix="/api/portfolio",
+    prefix="/api/v1/portfolio",
     tags=["Portfolio"],
 )
 app.include_router(
     sentiment_router,
-    prefix="/api/sentiment",
+    prefix="/api/v1/sentiment",
     tags=["Sentiment"],
 )
 app.include_router(
-    job_router, prefix="/api/jobs", tags=["Jobs"]
+    job_router, prefix="/api/v1/jobs", tags=["Jobs"]
 )
 
-
+app.include_router(
+    analysis_router,
+    prefix="/api/v1/analysis",
+    tags=['Analysis']
+)
 
 if __name__ == "__main__":
     uvicorn.run("api.main:app", host="0.0.0.0", port=7860, reload=True)

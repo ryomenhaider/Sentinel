@@ -74,67 +74,67 @@ class SentimentResponse(BaseModel):
 class CompanyFundamental(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    symbol: str
+    ticker: str
     filing_date: date
     fiscal_period: str
     fiscal_year: int
     filing_type: str
 
     # Income Statement
-    revenue: int
-    cost_of_revenue: int
-    gross_profit: int
-    operating_expenses: int
-    operating_income: int
-    interest_expense: int | None = None
-    pre_tax_income: int
-    income_tax_expense: int
-    net_income: int
-    eps_basic: float
-    eps_diluted: float
+    revenue: int | None
+    cost_of_revenue: int | None
+    gross_profit: int | None
+    operating_expenses: int | None
+    operating_income: int | None
+    interest_expense: int | None 
+    pre_tax_income: int | None
+    income_tax_expense: int | None
+    net_income: int | None
+    eps_basic: float | None
+    eps_diluted: float | None
 
     # Balance Sheet
     cash: int
-    short_term_investments: int | None = None
-    accounts_receivable: int
-    inventory: int | None = None
-    current_assets: int
-    total_assets: int
-    current_liabilities: int
-    short_term_debt: int | None = None
-    long_term_debt: int
-    total_liabilities: int
-    equity: int
+    short_term_investments: int | None 
+    accounts_receivable: int | None
+    inventory: int | None 
+    current_assets: int | None
+    total_assets: int | None
+    current_liabilities: int | None
+    short_term_debt: int | None 
+    long_term_debt: int | None
+    total_liabilities: int | None
+    equity: int | None
 
     # Cash Flow
-    operating_cash_flow: int
-    investing_cash_flow: int
-    financing_cash_flow: int
-    capital_expenditure: int
+    operating_cash_flow: int | None
+    investing_cash_flow: int | None
+    financing_cash_flow: int | None
+    capital_expenditure: int | None
 
     # Shares
-    shares_outstanding: int
-    weighted_average_shares: int
+    shares_outstanding: int | None
+    weighted_average_shares: int | None | float
 
     # Market Data
     current_price: float
-    market_cap: int
+    market_cap: int | None
 
     # Earnings & Estimates
-    earnings: float
-    eps_estimates: float
-    revenue_estimates: int
-    earnings_surprise: float
-    revenue_surprise: float
+    earnings: float | None
+    eps_estimates: float | None
+    revenue_estimates: int | None
+    earnings_surprise: float | None
+    revenue_surprise: float | None
 
     # Macro
-    macro_gdp: int
-    macro_gdp_growth: float
-    macro_inflation: float
-    macro_interest_rates: float
-    macro_unemployment: float
-    macro_government_debt: float
-    macro_exchange_rates: dict[str, float] = Field(default_factory=dict)
+    macro_gdp: int | None | float
+    macro_gdp_growth: float | None | int 
+    macro_inflation: float | None | int 
+    macro_interest_rates: float | None 
+    macro_unemployment: float | None
+    macro_government_debt: float | None
+    macro_exchange_rates: int | float | None
 
     # Company
     company_peers: list[str] = Field(default_factory=list)
@@ -157,92 +157,92 @@ class TechnicalSnapshot(BaseModel):
     timestamp_ms: int
 
     # OHLCV
-    open: float
-    high: float
-    low: float
-    close: float
-    volume: float
-    quote_volume: float
-    trades_count: int
+    open: float | None
+    high: float | None
+    low: float | None
+    close: float | None
+    volume: float | None
+    quote_volume: float | None
+    trades_count: int | None
 
     # Returns
-    ret_1b: float
-    ret_5b: float
-    ret_10b: float
-    ret_60b: float
-    ret_open_to_close: float
+    ret_1b: float | None
+    ret_5b: float | None
+    ret_10b: float | None
+    ret_60b: float | None
+    ret_open_to_close: float | None
 
     # Price Structure
-    hl_range: float
-    body_range: float
+    hl_range: float | None
+    body_range: float | None
 
     # Moving Averages
-    dist_sma_20: float
-    dist_sma_50: float
-    dist_sma_200: float
+    dist_sma_20: float | None
+    dist_sma_50: float | None
+    dist_sma_200: float | None
 
     # EMA
-    ema_diff_9_21: float
-    ema_diff_21_50: float
+    ema_diff_9_21: float | None
+    ema_diff_21_50: float | None
 
     # Volatility
-    vol_20: float
-    vol_60: float
-    atr_14_norm: float
+    vol_20: float | None
+    vol_60: float | None
+    atr_14_norm: float | None
 
     # Volume
-    volume_rel_20: float
-    taker_buy_vol_ratio: float
+    volume_rel_20: float | None
+    taker_buy_vol_ratio: float | None
 
     # Trade Window
-    trade_window_count: int
-    trade_window_vol_base: float
-    trade_window_vol_quote: float
-    trade_buy_vol_ratio: float
-    avg_trade_size: float
-    median_trade_size: float
-    large_trade_vol_ratio: float
+    trade_window_count: int | None
+    trade_window_vol_base: float | None
+    trade_window_vol_quote: float | None
+    trade_buy_vol_ratio: float | None
+    avg_trade_size: float | None
+    median_trade_size: float | None
+    large_trade_vol_ratio: float | None
 
     # Order Book
-    bid_price: float
-    ask_price: float
-    bid_qty: float
-    ask_qty: float
-    spread_abs: float
-    spread_bps: float
-    top_book_imbalance: float
+    bid_price: float | None
+    ask_price: float | None
+    bid_qty: float | None
+    ask_qty: float | None
+    spread_abs: float | None
+    spread_bps: float | None
+    top_book_imbalance: float | None
 
     # Market Depth
-    depth_bid_total: float
-    depth_ask_total: float
-    depth_imbalance: float
+    depth_bid_total: float | None
+    depth_ask_total: float | None
+    depth_imbalance: float | None
 
     # 24H Market Data
-    high_24h: float
-    low_24h: float
-    last_price_24h: float
-    range_24h: float
-    pct_change_24h: float
-    pos_in_24h_range: float
-    volume_24h: float
-    quote_volume_24h: float
+    high_24h: float | None
+    low_24h: float | None
+    last_price_24h: float | None
+    range_24h: float | None
+    pct_change_24h: float | None
+    pos_in_24h_range: float | None
+    volume_24h: float | None
+    quote_volume_24h: float | None
 
     # Funding
-    funding_rate: float
-    funding_rate_lag_3: float
-    funding_rate_change: float
-    funding_rate_zscore: float
-    time_to_next_funding_min: float
+    funding_rate: float | None
+    funding_rate_lag_3: float | None
+    funding_rate_change: float | None
+    funding_rate_zscore: float | None
+    time_to_next_funding_min: float | None
 
     # Open Interest
-    open_interest: float
-    oi_change_1h: float
-    oi_change_24h: float
-    oi_to_volume_24h: float
+    open_interest: float | None
+    oi_change_1h: float | None
+    oi_change_24h: float | None
+    oi_to_volume_24h: float | None
 
     # Scores
-    trend_score: float
-    mean_reversion_score: float
-    liquidity_score: float
-    order_flow_score: float
-    sentiment_score: float
+    trend_score: float | None
+    mean_reversion_score: float | None
+    liquidity_score: float | None
+    order_flow_score: float | None
+    sentiment_score: float | None
