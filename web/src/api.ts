@@ -11,8 +11,10 @@ import type {
 } from './types'
 
 async function get<T>(path: string, params?: Record<string, string | number>): Promise<T> {
-  const backendUrl = import.meta.env.VITE_API_URL || 'https://sentinel-ggi8.onrender.com'
-  const url = new URL(path, backendUrl)
+  const baseUrl =
+    import.meta.env.VITE_API_URL ||
+    (typeof window !== 'undefined' ? window.location.origin : 'https://sentinel-ggi8.onrender.com')
+  const url = new URL(path, baseUrl)
   if (params) {
     for (const [k, v] of Object.entries(params)) {
       if (v !== undefined && v !== null && v !== '') url.searchParams.set(k, String(v))
@@ -24,7 +26,7 @@ async function get<T>(path: string, params?: Record<string, string | number>): P
 }
 
 export const api = {
-  health: () => get<HealthStatus>('/api/v1/health'),
+  health: () => get<HealthStatus>('/api/health'),
   priceHistory: (ticker: string, limit: number) =>
     get<PriceRow[]>(`/api/v1/prices/${ticker}/history`, { limit }),
   anomalies: (ticker: string, days: number) =>
@@ -33,7 +35,7 @@ export const api = {
     get<ForecastRow[]>(`/api/v1/forecasts/${ticker}`, { horizon }),
   forecastCompare: (tickers: string, horizon: number) =>
     get<ComparePayload>(`/api/v1/forecasts/compare`, { tickers, horizon }),
-  weights: () => get<WeightRow[]>(`/api/portfolio/weights`),
+  weights: () => get<WeightRow[]>(`/api/v1/portfolio/weights`),
   sentiment: (ticker: string, days: number) =>
     get<SentimentRow[]>(`/api/v1/sentiment/${ticker}`, { days }),
   technical: (symbol: string) =>
