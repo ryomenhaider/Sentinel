@@ -24,7 +24,7 @@ async function get<T>(path: string, params?: Record<string, string | number>): P
 }
 
 export const api = {
-  health: () => get<HealthStatus>('/api/health'),
+  health: () => get<HealthStatus>('/api/v1/health'),
   priceHistory: (ticker: string, limit: number) =>
     get<PriceRow[]>(`/api/v1/prices/${ticker}/history`, { limit }),
   anomalies: (ticker: string, days: number) =>
