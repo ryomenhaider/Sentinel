@@ -26,16 +26,16 @@ async function get<T>(path: string, params?: Record<string, string | number>): P
 export const api = {
   health: () => get<HealthStatus>('/api/health'),
   priceHistory: (ticker: string, limit: number) =>
-    get<PriceRow[]>(`/api/prices/${ticker}/history`, { limit }),
+    get<PriceRow[]>(`/api/v1/prices/${ticker}/history`, { limit }),
   anomalies: (ticker: string, days: number) =>
-    get<AnomalyRow[]>(`/api/anomalies`, { ticker, days }),
+    get<AnomalyRow[]>(`/api/v1/anomalies`, { ticker, days }),
   forecast: (ticker: string, horizon: number) =>
-    get<ForecastRow[]>(`/api/forecasts/${ticker}`, { horizon }),
+    get<ForecastRow[]>(`/api/v1/forecasts/${ticker}`, { horizon }),
   forecastCompare: (tickers: string, horizon: number) =>
-    get<ComparePayload>(`/api/forecasts/compare`, { tickers, horizon }),
+    get<ComparePayload>(`/api/v1/forecasts/compare`, { tickers, horizon }),
   weights: () => get<WeightRow[]>(`/api/portfolio/weights`),
   sentiment: (ticker: string, days: number) =>
-    get<SentimentRow[]>(`/api/sentiment/${ticker}`, { days }),
+    get<SentimentRow[]>(`/api/v1/sentiment/${ticker}`, { days }),
   technical: (symbol: string) =>
     get<TechnicalSnapshot>(`/api/v1/analysis/technical/${symbol}`),
   fundamental: (ticker: string) =>
