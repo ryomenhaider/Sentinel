@@ -5,7 +5,8 @@ from sqlalchemy import text
 
 from database.models import (
     MarketData, CryptoPrice, EconomicIndicator,
-    NewsSentiment, Anomaly, Forecast, PortfolioWeight, ModelRun, Features
+    NewsSentiment, Anomaly, Forecast, PortfolioWeight, ModelRun, Features,
+    CompanyFundamental, TechnicalSnapshot
 )
 
 
@@ -196,6 +197,37 @@ def get_features(session: Session, ticker: str, limit: int = 100) -> list[Featur
         .all()
     )
 
+def insert_ta_data(session: Session, data: dict):
+    stmt = insert(TechnicalSnapshot).values(data)
+    stmt = stmt.on_conflict_do_nothing(index_elements=['symbol', 'filing_date'])
+    session.execute(stmt)
+    session.commit()
+
+
+def get_ta_data(session: Session, symbol: str, limit: int = 1) -> dict[TechnicalSnapshot]:
+    return (
+        session.query(TechnicalSnapshot)
+        .filter(TechnicalSnapshot.symbol == symbol)
+        .order_by(TechnicalSnapshot.date.desc())
+        .limit(limit)
+        .all()
+    )
+
+def insert_fa_data(session: Session, data: dict):
+    stmt = insert(CompanyFundamental).values(data)
+    stmt = stmt.on_conflict_do_nothing(index_elements=['ticker', 'timestamp_ms'])
+    session.execute(stmt)
+    session.commit()
+
+
+def get_fa_data(session: Session, ticker: str, limit: int = 1) -> dict[CompanyFundamental]:
+    return (
+        session.query(CompanyFundamental)
+        .filter(CompanyFundamental.ticker == ticker)
+        .order_by(CompanyFundamental.date.desc())
+        .limit(limit)
+        .all()
+    )
 
 if __name__ == "__main__":
     from database.connection import get_session
