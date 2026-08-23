@@ -11,9 +11,9 @@ import type {
 } from './types'
 
 async function get<T>(path: string, params?: Record<string, string | number>): Promise<T> {
-  const baseUrl =
-    import.meta.env.VITE_API_URL ||
-    (typeof window !== 'undefined' ? window.location.origin : 'https://sentinel-ggi8.onrender.com')
+  const baseUrl = import.meta.env.DEV
+    ? window.location.origin
+    : (import.meta.env.VITE_API_URL || 'https://sentinel-ggi8.onrender.com')
   const url = new URL(path, baseUrl)
   if (params) {
     for (const [k, v] of Object.entries(params)) {
