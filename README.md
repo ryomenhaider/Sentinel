@@ -24,10 +24,6 @@ Sentinel is a full-stack pipeline that turns raw financial data into decisions:
 4. **Serve** — expose everything through a REST API and a single-page React dashboard.
 5. **Monitor** — track model drift (PSI + KS) and alert via email/Slack.
 
-The backend and frontend are fully decoupled: the API is a pure JSON service, and the SPA can be hosted anywhere. **PostgreSQL is the only external dependency of the backend.**
-
-> **Status:** every pipeline, model, endpoint, and dashboard page listed below is implemented and runnable. See [Roadmap](#roadmap) for what's next.
-
 ---
 
 ## Highlights
