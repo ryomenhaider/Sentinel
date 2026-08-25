@@ -1,12 +1,20 @@
-from sentinel.ingestion.hermes_c import hr
+from sentinel.ingestion.v2.hermes_c import hr
+
 from sentinel.database.connection import get_session
 from sentinel.database.crud import insert_fa_data, insert_ta_data
+
 import logging
+
 from dataclasses import asdict
+
+from sentinel.constants import (
+    SYMBOLS, TICKERS
+)
+
 logger = logging.getLogger(__name__)
 
 
-async def run():
+async def main():
     with get_session() as session:
         try:
             for symbol in SYMBOLS:
@@ -34,10 +42,3 @@ async def run():
                 print(f'Unexpected Error: {e}]')
                 session.rollback()
 
-if __name__ == '__main__':
-    import asyncio
-
-    async def main():
-        await run()
-
-    asyncio.run(main())

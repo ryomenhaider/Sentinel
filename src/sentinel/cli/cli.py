@@ -15,7 +15,7 @@ API_APP = "sentinel.api.main:app"
 
 @cli.command()
 def ingest():
-    from sentinel.ingestion.ingestion_pipeline import run_pipeline
+    from sentinel.ingestion.v1.ingestion_pipeline import run_pipeline
 
     run_pipeline()
 

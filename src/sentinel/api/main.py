@@ -17,7 +17,7 @@ from sentinel.config.logging_config import get_logger
 
 logger = get_logger(__name__)
 
-app = FastAPI(
+app_v1 = FastAPI(
     title="Sentinel",
     description=(
         """
@@ -31,7 +31,7 @@ app = FastAPI(
     redoc_url="/api/v1/redoc",
 )
 
-app.add_middleware(
+app_v1.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_methods=["*"],
@@ -39,7 +39,7 @@ app.add_middleware(
 )
 
 
-@app.middleware("http")
+@app_v1.middleware("http")
 async def add_timing_header(request: Request, call_next):
     start = time.time()
     response = await call_next(request)
@@ -51,7 +51,7 @@ async def add_timing_header(request: Request, call_next):
     return response
 
 
-@app.on_event("startup")
+@app_v1.on_event("startup")
 async def startup():
     try:
         from sentinel.database.connection import test_connection
@@ -59,17 +59,17 @@ async def startup():
         db_ok = test_connection()
         if db_ok:
             logger.info(
-                f"Sentinel API v{app.version} started successfully | Database: connected"
+                f"Sentinel API v{app_v1.version} started successfully | Database: connected"
             )
         else:
             logger.warning(
-                f"Sentinel API v{app.version} started | Database: unreachable"
+                f"Sentinel API v{app_v1.version} started | Database: unreachable"
             )
     except Exception as e:
         logger.error(f"Startup error: {e}")
 
 
-@app.get("/", response_class=HTMLResponse, include_in_schema=False)
+@app_v1.get("/", response_class=HTMLResponse, include_in_schema=False)
 async def root():
     return HTMLResponse(
         content="""<!DOCTYPE html>
@@ -86,7 +86,7 @@ async def root():
     )
 
 
-@app.get("/api/health")
+@app_v1.get("/api/health")
 async def health():
     try:
         from sentinel.database.connection import test_connection
@@ -97,44 +97,44 @@ async def health():
     return {
         "status": "ok" if db_ok else "degraded",
         "database": "connected" if db_ok else "unreachable",
-        "version": app.version,
+        "version": app_v1.version,
     }
 
 
-app.include_router(
+app_v1.include_router(
     prices_router,
     prefix="/api/v1/prices",
     tags=["Prices"],
 )
-app.include_router(
+app_v1.include_router(
     anomalies_router,
     prefix="/api/v1/anomalies",
     tags=["Anomalies"],
 )
-app.include_router(
+app_v1.include_router(
     forecasts_router,
     prefix="/api/v1/forecasts",
     tags=["Forecasts"],
 )
-app.include_router(
+app_v1.include_router(
     portfolio_router,
     prefix="/api/v1/portfolio",
     tags=["Portfolio"],
 )
-app.include_router(
+app_v1.include_router(
     sentiment_router,
     prefix="/api/v1/sentiment",
     tags=["Sentiment"],
 )
-app.include_router(
+app_v1.include_router(
     job_router, prefix="/api/v1/jobs", tags=["Jobs"]
 )
 
-app.include_router(
+app_v1.include_router(
     analysis_router,
     prefix="/api/v2/analysis",
     tags=['Analysis']
 )
 
 if __name__ == "__main__":
-    uvicorn.run("sentinel.api.main:app", host="0.0.0.0", port=7860, reload=True)
+    uvicorn.run("sentinel.api.main:app_v1", host="0.0.0.0", port=7860, reload=True)

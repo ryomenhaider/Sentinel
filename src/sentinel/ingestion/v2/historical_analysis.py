@@ -1,4 +1,4 @@
-from sentinel.ingestion.hermes_c import hr
+from sentinel.ingestion.v2.hermes_c import hr
 
 from sentinel.database.connection import get_session
 from sentinel.database.crud import insert_crypto_history_data
@@ -21,7 +21,7 @@ def forward_std(series: pd.Series, horizon: int) -> pd.Series:
         .iloc[::-1]
     )
 
-async def run():
+async def main():
     with get_session() as session:
         try:
             for symbol in SYMBOLS:
@@ -29,7 +29,7 @@ async def run():
                     ta = await hr.ta_history.get_history(symbol=symbol, interval='1h')
 
                     logger.info(f'technical data fetched for {symbol}')
-                    logger.info(f'The Target features are being created')
+                    logger.info(f'The Target features are being created for {symbol}')
 
                     ta['date_time'] = pd.to_datetime(ta['open_time'], unit='ms')
                     ta['close_time'] = pd.to_datetime(ta['close_time'], unit='ms')
@@ -69,6 +69,3 @@ async def run():
                 print(f'Unexpected Error: {e}]')
                 session.rollback()
 
-import asyncio
-
-asyncio.run(main=run())
