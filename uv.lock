@@ -913,7 +913,7 @@ wheels = [
 
 [[package]]
 name = "hermes-plt"
-version = "0.2.8"
+version = "0.2.12"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
@@ -928,9 +928,9 @@ dependencies = [
     { name = "sec-cik-mapper" },
     { name = "yfinance" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a8/13/1e98fcf1470e8f665df1aa626199bc90e1951277cb5946f11ec2bed19f01/hermes_plt-0.2.8.tar.gz", hash = "sha256:ea330afc25be8c381b69b2671b2a92cfd902c2df29fbe07688f8dd2bc514f7f6", size = 568905, upload-time = "2026-08-23T07:24:51.106Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/03/9c/1c21cdc881b2b989a3bf8436cadaa7404f30fb50a3b641d96df5bf432eb9/hermes_plt-0.2.12.tar.gz", hash = "sha256:4c7e3a8b40e6d3273ccd66f22481667cc365b57ea84efc43f9d66416072b3b0d", size = 591645, upload-time = "2026-08-24T14:36:46.558Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/5a/61/6a2c0045890fe5096c48e31ec73bf1bcb8936b9c905ecc6bbfbda193524d/hermes_plt-0.2.8-py3-none-any.whl", hash = "sha256:5c29bb7ffdf278512049323bf1867878245d144b2e5865580e344e0cbd234d24", size = 413676, upload-time = "2026-08-23T07:24:49.869Z" },
+    { url = "https://files.pythonhosted.org/packages/cb/dd/829219147d40de7f29797a5c54a052c32616eec81dd7ca5bceafcf14b313/hermes_plt-0.2.12-py3-none-any.whl", hash = "sha256:611006e7e23c0a142b32ac2c43ac1b7cdeac6f7d035a778dfa2e4987a1875b60", size = 425069, upload-time = "2026-08-24T14:36:45.213Z" },
 ]
 
 [[package]]
@@ -2425,7 +2425,7 @@ requires-dist = [
     { name = "ccxt", specifier = ">=4.5.71" },
     { name = "dotenv", specifier = ">=0.9.9" },
     { name = "fastapi", specifier = ">=0.141.1" },
-    { name = "hermes-plt", specifier = ">=0.2.8" },
+    { name = "hermes-plt", specifier = ">=0.2.11" },
     { name = "llvmlite", specifier = ">=0.43" },
     { name = "mlflow", specifier = "==1.27.0" },
     { name = "numba", specifier = ">=0.60" },

@@ -9,7 +9,7 @@ dependencies = [
     "ccxt>=4.5.71",
     "dotenv>=0.9.9",
     "fastapi>=0.141.1",
-    "hermes-plt>=0.2.8",
+    "hermes-plt>=0.2.11",
     "llvmlite>=0.43",
     "mlflow==1.27.0",
     "numba>=0.60",
@@ -40,11 +40,11 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["api", "cli", "config", "dashboard", "database", "ingestion", "ml", "mlops"]
+packages = ["src/sentinel"]
 
 [tool.uv]
 package = true
 constraint-dependencies = ["numba>=0.60", "llvmlite>=0.43"]
 
 [project.scripts]
-stl = "cli.cli:cli"
+stl = "sentinel.cli.cli:cli"
