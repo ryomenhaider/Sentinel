@@ -97,19 +97,19 @@ cp .env.example .env
 #   (local, Docker, or Supabase pooler URL)
 
 # Initialize schema + seed data
-#   Option A — Supabase: paste database/schema.sql then database/seed_data.sql
-#              into the SQL Editor (recommended)
+#   Option A — Supabase: paste src/sentinel/database/schema.sql then
+#              src/sentinel/database/seed_data.sql into the SQL Editor (recommended)
 #   Option B — any Postgres:
-psql "$DB_URL" -f database/schema.sql && psql "$DB_URL" -f database/seed_data.sql
+psql "$DB_URL" -f src/sentinel/database/schema.sql && psql "$DB_URL" -f src/sentinel/database/seed_data.sql
 
 # Ingest data (individual fetchers also available, see below)
-python -m ingestion.ingestion_pipeline
+python -m sentinel.ingestion.v1.ingestion_pipeline
 
 # Train models
-python -m ml.train_pipeline
+python -m sentinel.ml.train_pipeline
 
 # Run the API
-uvicorn api.main:app --host 0.0.0.0 --port 7860
+uvicorn sentinel.api.main:app --host 0.0.0.0 --port 7860
 
 # Verify
 curl http://localhost:7860/api/health
@@ -118,11 +118,11 @@ curl http://localhost:7860/api/health
 Individual pipeline stages:
 
 ```bash
-python -m ingestion.price_fetcher      # stocks  (yfinance)
-python -m ingestion.crypto_fetcher     # crypto  (CCXT)
-python -m ingestion.macro_fetcher      # macro   (FRED)
-python -m ingestion.news_fetcher       # news    (newsdata.io)
-python -m ingestion.feature_engineer   # features
+python -m sentinel.ingestion.v1.price_fetcher      # stocks  (yfinance)
+python -m sentinel.ingestion.v1.crypto_fetcher      # crypto  (CCXT)
+python -m sentinel.ingestion.v1.macro_fetcher       # macro   (FRED)
+python -m sentinel.ingestion.v1.news_fetcher        # news    (newsdata.io)
+python -m sentinel.ingestion.v1.feature_engineer    # features
 ```
 
 ### 2. Frontend (`web/`)
@@ -162,40 +162,62 @@ stl all           # ingest → train → start the API
 ## Project Structure
 
 ```
-├── api/                        # FastAPI application
-│   ├── main.py                # app factory, CORS, middleware, routers
-│   ├── schemas.py             # Pydantic response models
-│   └── routers/               # prices · anomalies · forecasts · sentiment · portfolio · jobs · analysis
-├── web/                        # React SPA (Vite + TypeScript + Plotly)
-│   ├── src/pages/             # overview · anomalies · forecasts · technical · fundamental · portfolio · sentiment
-│   ├── src/components/        # Navbar, UI primitives, Plot wrapper
-│   ├── src/api.ts             # API client (dev proxy-aware)
+├── src/sentinel/                   # Main Python package
+│   ├── api/
+│   │   ├── main.py                # app factory, CORS, middleware, routers
+│   │   ├── auth.py                # stubbed JWT/API-key auth
+│   │   ├── schemas/               # Pydantic response models
+│   │   └── routers/
+│   │       ├── v1/                # prices · anomalies · forecasts · sentiment · portfolio
+│   │       ├── v2/                # analysis (technical + fundamental)
+│   │       └── jobs.py            # job trigger endpoint
+│   ├── cli/
+│   │   └── cli.py                 # `stl` Typer CLI
+│   ├── config/
+│   │   ├── settings.py            # env-var driven configuration
+│   │   └── logging_config.py      # JSON structured logging (rotating file + console)
+│   ├── database/
+│   │   ├── connection.py          # SQLAlchemy engine + session factory
+│   │   ├── models.py              # ORM models (MarketData, CryptoPrice, …)
+│   │   ├── crud.py                # insert/select/upsert operations
+│   │   ├── schema.sql             # DDL for core tables
+│   │   ├── seed_data.sql          # seed data
+│   │   ├── 002_crypto_data.sql    # crypto schema
+│   │   └── analysis.sql           # analysis tables DDL
+│   ├── ingestion/
+│   │   ├── v1/                    # price · crypto · macro · news · feature_engineer · pipeline
+│   │   └── v2/                    # analysis_data · hermes · historical · macro_data
+│   ├── ml/
+│   │   ├── anomaly_detector.py    # PyOD IForest + LOF
+│   │   ├── forecaster.py          # Prophet + XGBoost, walk-forward CV
+│   │   ├── sentiment_engine.py    # FinBERT scoring
+│   │   ├── portfolio_optimizer.py # scipy MVO, Black-Litterman, Kelly
+│   │   ├── feature_store.py       # in-memory cached feature retrieval
+│   │   ├── model_registry.py      # MLflow save/load/promote
+│   │   └── train_pipeline.py      # orchestrated training with metrics
+│   ├── mlops/
+│   │   └── drift_detector.py      # PSI + KS drift detection, Slack/email alerts
+│   ├── scheduler/
+│   │   └── jobs.py                # job runner: ingest · features · retrain · drift
+│   ├── constants.py               # default tickers (18 stocks) & crypto symbols (20)
+│   └── __main__.py                # package entrypoint
+├── web/                            # React SPA (Vite + TypeScript + Plotly)
+│   ├── src/
+│   │   ├── pages/                 # overview · anomalies · forecasts · technical · fundamental · portfolio · sentiment
+│   │   ├── components/            # Navbar, AlertToast, ErrorBoundary, Plot, ui
+│   │   ├── api.ts                 # API client (dev proxy-aware)
+│   │   ├── types.ts               # TypeScript interfaces
+│   │   └── theme.ts               # dark Bloomberg-style theme
 │   └── vite.config.ts
-├── ingestion/                  # data collection + feature engineering
-│   ├── price_fetcher.py       # yfinance OHLCV
-│   ├── crypto_fetcher.py      # CCXT
-│   ├── macro_fetcher.py       # FRED
-│   ├── news_fetcher.py        # newsdata.io + FinBERT sentiment
-│   ├── feature_engineer.py    # RSI, Bollinger, lags, rolling stats
-│   └── ingestion_pipeline.py  # stage runner with per-stage reporting
-├── ml/                         # models
-│   ├── anomaly_detector.py    # PyOD IForest + LOF
-│   ├── forecaster.py          # Prophet + XGBoost, walk-forward CV
-│   ├── sentiment_engine.py    # FinBERT scoring
-│   ├── portfolio_optimizer.py # scipy MVO
-│   ├── feature_store.py
-│   ├── model_registry.py      # MLflow save/load/promote
-│   └── train_pipeline.py      # orchestrated training with metrics
-├── mlops/
-│   └── drift_detector.py      # PSI + KS drift detection, Slack/email alerts
-├── scheduler/
-│   └── jobs.py                # job runner: ingest · features · retrain · drift
-├── cli/
-│   └── cli.py                 # `stl` Typer CLI
-├── database/                   # SQLAlchemy models, CRUD, schema.sql + seed_data.sql
-├── config/                     # settings.py, logging_config.py (JSON logs)
-├── res/                        # roadmap docs (Phase 1–5)
-└── .python-version             # Python 3.12 (uv)
+├── res/
+│   └── chechlist.md               # v1 implementation checklist (25 areas)
+├── .github/workflows/
+│   └── scheduled_jobs.yml         # GitHub Actions (placeholder)
+├── pyproject.toml                  # Python project + dependencies
+├── uv.lock                         # uv lockfile
+├── .env.example                    # environment variable template
+├── .python-version                 # Python 3.12 (uv)
+└── README.md
 ```
 
 ---
@@ -250,10 +272,10 @@ Frontend build-time config lives in `web/.env.production` (`VITE_API_URL`). In d
 - **Today:** ingestion and training are CLI-driven (`python -m ...`), or run through the job runner:
 
   ```bash
-  python -m scheduler.jobs ingest     # also: features · retrain · drift
+  python -m sentinel.scheduler.jobs ingest     # also: features · retrain · drift
   ```
 
-- **Planned:** APScheduler inside the app + GitHub Actions cron for cloud scheduling (see [Phase 2](res/PHASE_2_SCHEDULER.md)).
+- **Planned:** APScheduler inside the app + GitHub Actions cron for cloud scheduling (see `res/chechlist.md`).
 
 ---
 
@@ -261,18 +283,18 @@ Frontend build-time config lives in `web/.env.production` (`VITE_API_URL`). In d
 
 ```bash
 # Pipelines (each exits non-zero on failure)
-python -m ingestion.ingestion_pipeline
-python -m ml.train_pipeline
+python -m sentinel.ingestion.v1.ingestion_pipeline
+python -m sentinel.ml.train_pipeline
 
 # Scheduled jobs
-python -m scheduler.jobs ingest
+python -m sentinel.scheduler.jobs ingest
 
 # Drift detection CLI
-python mlops/drift_detector.py --tickers AAPL,MSFT --send-alerts
+python -m sentinel.mlops.drift_detector --tickers AAPL,MSFT --send-alerts
 
 # API smoke checks
 curl http://localhost:7860/api/health
-curl http://localhost:7860/api/prices/AAPL/history?limit=5
+curl http://localhost:7860/api/v1/prices/AAPL/history?limit=5
 
 # Frontend
 cd web && npm run lint && npm run build

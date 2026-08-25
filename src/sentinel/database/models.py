@@ -450,3 +450,27 @@ class market_features(Base):
     target_log_return_12h: Mapped[float | None] = mapped_column(Float)
     target_log_return_24h: Mapped[float | None] = mapped_column(Float)
     target_log_return_72h: Mapped[float | None] = mapped_column(Float)
+
+
+class macro_data(Base):
+    __tablename__ = "macro_data"
+
+    date: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        primary_key=True,
+    )
+
+    value: Mapped[float | None] = mapped_column(
+        Float,
+        nullable=True,
+    )
+
+    series_id: Mapped[str] = mapped_column(
+        String(48),
+        primary_key=True,
+    )
+
+    unit: Mapped[str] = mapped_column(
+        String(12),
+        nullable=True,
+    )

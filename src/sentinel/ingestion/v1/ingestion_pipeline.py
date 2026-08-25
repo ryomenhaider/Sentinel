@@ -25,31 +25,31 @@ def info(msg: str) -> None:
 
 
 def run_price_fetcher() -> bool:
-    from sentinel.ingestion.price_fetcher import run
+    from sentinel.ingestion.v1.price_fetcher import run
     run()
     return True
 
 
 def run_crypto_fetcher() -> bool:
-    from sentinel.ingestion.crypto_fetcher import run
+    from sentinel.ingestion.v1.crypto_fetcher import run
     run()
     return True
 
 
 def run_macro_fetcher() -> bool:
-    from sentinel.ingestion.macro_fetcher import run
+    from sentinel.ingestion.v1.macro_fetcher import run
     run()
     return True
 
 
 def run_news_fetcher() -> bool:
-    from sentinel.ingestion.news_fetcher import run
+    from sentinel.ingestion.v1.news_fetcher import run
     run()
     return True
 
 
 def run_feature_engineer() -> bool:
-    from sentinel.ingestion.feature_engineer import main
+    from sentinel.ingestion.v1.feature_engineer import main
     main()
     return True
 

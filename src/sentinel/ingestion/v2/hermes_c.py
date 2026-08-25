@@ -16,16 +16,6 @@ hr = Hermes(
         sec_username=SEC_USERNAME,
         finnhub_api=FINNHUB_API,
         cache_dir='./raw',
+        use_cache=True
     )
 
-async def main():
-    ta = await hr.ta_history.get_history(symbol='BTCUSDT', interval='1h')
-    fa = await hr.fa_history.get_history(symbols=['GOOGL'])
-    ta = ta.reset_index(drop=True)
-    fa = fa.reset_index(drop=True)
-    ta.to_csv('research/data/TA.csv')
-    fa.to_csv('research/data/FA.csv')
-        
-
-import asyncio
-asyncio.run(main())
