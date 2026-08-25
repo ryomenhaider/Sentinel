@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from typing import List
 from sentinel.config.logging_config import get_logger
 from sentinel.database.crud import get_fa_data, get_ta_data
-from sentinel.api.schemas import CompanyFundamental, TechnicalSnapshot
+from sentinel.api.schemas.analyis import CompanyFundamental, TechnicalSnapshot
 from sentinel.database.connection import get_session
 
 logger = get_logger(__name__)

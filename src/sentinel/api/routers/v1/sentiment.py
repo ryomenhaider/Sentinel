@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException
 from typing import List
 from sentinel.config.logging_config import get_logger
 from sentinel.database.crud import get_sentiment as fetch_sentiment, get_all_tickers
-from sentinel.api.schemas import SentimentResponse
+from sentinel.api.schemas.small import SentimentResponse
 from sentinel.database.connection import get_session
 
 logger = get_logger(__name__)
@@ -11,7 +11,7 @@ router = APIRouter()
 
 
 @router.get("/heatmap", response_model=dict)
-async def get_sentiment_heatmap():
+def get_sentiment_heatmap():
     with get_session() as session:
         try:
             tickers = get_all_tickers(session)
@@ -43,7 +43,7 @@ async def get_sentiment_heatmap():
 
 
 @router.get("/timeline", response_model=List[SentimentResponse])
-async def get_sentiment_timeline(ticker: str, days: int = 30):
+def get_sentiment_timeline(ticker: str, days: int = 30):
     with get_session() as session:
         try:
             rows = fetch_sentiment(session, ticker, limit=days)
@@ -58,7 +58,7 @@ async def get_sentiment_timeline(ticker: str, days: int = 30):
 
 
 @router.get("/{ticker}", response_model=List[SentimentResponse])
-async def get_ticker_sentiment(ticker: str, days: int = 30):
+def get_ticker_sentiment(ticker: str, days: int = 30):
     with get_session() as session:
         try:
             rows = fetch_sentiment(session, ticker, limit=days)

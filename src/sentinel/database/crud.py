@@ -3,11 +3,12 @@ from sqlalchemy.orm import Session
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy import text
 import numpy as np
+import pandas as pd
 
 from sentinel.database.models import (
     MarketData, CryptoPrice, EconomicIndicator,
     NewsSentiment, Anomaly, Forecast, PortfolioWeight, ModelRun, Features,
-    CompanyFundamental, TechnicalSnapshot
+    CompanyFundamental, TechnicalSnapshot, market_features
 )
 
 
@@ -232,7 +233,23 @@ def insert_fa_data(session: Session, data: dict):
     session.execute(stmt)
     session.commit()
 
+def insert_crypto_history_data(session: Session, data: pd.DataFrame):
+    df = data.copy()
+    for col in ["drawdown_duration", "trades_count"]:
+        if col in df.columns:
+            df[col] = np.where(df[col].isna(), None, df[col])
+    mappings = df.to_dict(orient='records')
 
+    session.bulk_insert_mappings(market_features, mappings)
+    session.commit()
+
+def get_crypto_history_data(session: Session, symbol: str, limit: int = 1000):
+    return (
+        session.query(market_features)
+        .filter(market_features.symbol == symbol)
+        .limit(limit=limit)
+        .all()
+    )
 
 def get_fa_data(session: Session, ticker: str, limit: int = 1) -> CompanyFundamental:
     return (

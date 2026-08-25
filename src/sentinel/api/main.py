@@ -5,13 +5,13 @@ from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 
-from sentinel.api.routers.anomalies import router as anomalies_router
-from sentinel.api.routers.forecasts import router as forecasts_router
+from sentinel.api.routers.v1.anomalies import router as anomalies_router
+from sentinel.api.routers.v1.forecasts import router as forecasts_router
 from sentinel.api.routers.jobs import router as job_router
-from sentinel.api.routers.portfolio import router as portfolio_router
-from sentinel.api.routers.prices import router as prices_router
-from sentinel.api.routers.sentiment import router as sentiment_router
-from sentinel.api.routers.analysis import router as analysis_router
+from sentinel.api.routers.v1.portfolio import router as portfolio_router
+from sentinel.api.routers.v1.prices import router as prices_router
+from sentinel.api.routers.v1.sentiment import router as sentiment_router
+from sentinel.api.routers.v2.analysis import router as analysis_router
 
 from sentinel.config.logging_config import get_logger
 
@@ -132,7 +132,7 @@ app.include_router(
 
 app.include_router(
     analysis_router,
-    prefix="/api/v1/analysis",
+    prefix="/api/v2/analysis",
     tags=['Analysis']
 )
 

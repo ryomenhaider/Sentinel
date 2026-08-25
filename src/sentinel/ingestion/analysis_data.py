@@ -5,51 +5,6 @@ import logging
 from dataclasses import asdict
 logger = logging.getLogger(__name__)
 
-SYMBOLS = [
-    "BTCUSDT",
-    "ETHUSDT",
-    "BNBUSDT",
-    "XRPUSDT",
-    "SOLUSDT",
-    "DOGEUSDT",
-    "TRXUSDT",
-    "ADAUSDT",
-    "LINKUSDT",
-    "AVAXUSDT",
-    "SUIUSDT",
-    "LTCUSDT",
-    "BCHUSDT",
-    "HBARUSDT",
-    "NEARUSDT",
-    "UNIUSDT",
-    "DOTUSDT",
-    "APTUSDT",
-    "ARBUSDT",
-    "OPUSDT",
-]
-
-TICKERS = [
-    "NVDA",
-    "AAPL",
-    "GOOGL",
-    "MSFT",
-    "AMZN",
-    "AVGO",
-    "META",
-    "TSLA",
-    "LLY",
-    "WMT",
-    "AMD",
-    "V",
-    "XOM",
-    "JNJ",
-    "ORCL",
-    "COST",
-    "NFLX",
-    "CRM",
-]
-
-
 
 async def run():
     with get_session() as session:

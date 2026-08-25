@@ -3,17 +3,14 @@ from fastapi import APIRouter, HTTPException
 from typing import List
 from sentinel.config.logging_config import get_logger
 from sentinel.database.crud import get_forecasts as fetch_forecast
-from sentinel.api.schemas import ForecastResponse
+from sentinel.api.schemas.small import ForecastResponse
 from sentinel.database.connection import get_session
 
 logger = get_logger(__name__)
 router = APIRouter()
 
-# FIX: /compare and /accuracy must be declared BEFORE /{ticker}
-# otherwise FastAPI matches "compare"/"accuracy" as ticker values
-
 @router.get('/compare')
-async def compare_forecast(tickers: str, horizon: int = 30):
+def compare_forecast(tickers: str, horizon: int = 30):
     with get_session() as session:
         try:
             ticker_list = [t.strip() for t in tickers.split(',') if t.strip()]
@@ -34,12 +31,12 @@ async def compare_forecast(tickers: str, horizon: int = 30):
 
 
 @router.get('/accuracy')
-async def forecast_accuracy():
+def forecast_accuracy():
     return {"message": "coming soon"}
 
 
 @router.get("/{ticker}", response_model=List[ForecastResponse])
-async def get_forecast(ticker: str, horizon: int = 30):
+def get_forecast(ticker: str, horizon: int = 30):
     with get_session() as session:
         try:
             row = fetch_forecast(session, ticker, horizon_days=horizon)
