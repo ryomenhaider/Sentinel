@@ -1,7 +1,8 @@
-from sqlalchemy import Column, Date, Text, Numeric, BigInteger, Integer, text, Float
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy import Column, String, SmallInteger, DateTime, Date, Text, Numeric, BigInteger, Integer, text, Float
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy import TIMESTAMP
+from datetime import datetime
 
 class Base(DeclarativeBase):
     pass
@@ -316,3 +317,136 @@ class TechnicalSnapshot(Base):
         server_default=text("NOW()"),
         nullable=False,
     )
+
+
+class market_features(Base):
+    __tablename__ = "market_features"
+
+    symbol: Mapped[str] = mapped_column(String(32), primary_key=True)
+    interval: Mapped[str] = mapped_column(String(16), primary_key=True)
+    open_time: Mapped[BigInteger] = mapped_column(
+        BigInteger,
+        primary_key=True,
+    )
+    date_time: Mapped[datetime] = mapped_column(
+            DateTime(timezone=True),
+            primary_key=True,
+        )
+        
+
+    open: Mapped[float | None] = mapped_column(Float)
+    high: Mapped[float | None] = mapped_column(Float)
+    low: Mapped[float | None] = mapped_column(Float)
+    close: Mapped[float | None] = mapped_column(Float)
+    volume: Mapped[float | None] = mapped_column(Float)
+    close_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    quote_volume: Mapped[float | None] = mapped_column(Float)
+    trades_count: Mapped[BigInteger | None] = mapped_column(BigInteger)
+    taker_buy_volume: Mapped[float | None] = mapped_column(Float)
+    taker_buy_quote_volume: Mapped[float | None] = mapped_column(Float)
+
+    ret_1b: Mapped[float | None] = mapped_column(Float)
+    ret_open_to_close: Mapped[float | None] = mapped_column(Float)
+    ret_3b: Mapped[float | None] = mapped_column(Float)
+    ret_5b: Mapped[float | None] = mapped_column(Float)
+    ret_10b: Mapped[float | None] = mapped_column(Float)
+    ret_20b: Mapped[float | None] = mapped_column(Float)
+    ret_60b: Mapped[float | None] = mapped_column(Float)
+
+    hl_range: Mapped[float | None] = mapped_column(Float)
+    body_range: Mapped[float | None] = mapped_column(Float)
+    dist_sma_20: Mapped[float | None] = mapped_column(Float)
+    dist_sma_50: Mapped[float | None] = mapped_column(Float)
+    dist_sma_200: Mapped[float | None] = mapped_column(Float)
+    ema_diff_9_21: Mapped[float | None] = mapped_column(Float)
+    ema_diff_21_50: Mapped[float | None] = mapped_column(Float)
+
+    vol_20: Mapped[float | None] = mapped_column(Float)
+    vol_60: Mapped[float | None] = mapped_column(Float)
+    atr_14_norm: Mapped[float | None] = mapped_column(Float)
+    volume_sma_20: Mapped[float | None] = mapped_column(Float)
+    volume_rel_20: Mapped[float | None] = mapped_column(Float)
+    taker_buy_vol_ratio: Mapped[float | None] = mapped_column(Float)
+
+    rsi_14: Mapped[float | None] = mapped_column(Float)
+    macd: Mapped[float | None] = mapped_column(Float)
+    macd_signal: Mapped[float | None] = mapped_column(Float)
+    macd_hist: Mapped[float | None] = mapped_column(Float)
+
+    bb_upper: Mapped[float | None] = mapped_column(Float)
+    bb_lower: Mapped[float | None] = mapped_column(Float)
+    bb_width: Mapped[float | None] = mapped_column(Float)
+    bb_pct: Mapped[float | None] = mapped_column(Float)
+    obv: Mapped[float | None] = mapped_column(Float)
+
+    returns_skew_20: Mapped[float | None] = mapped_column(Float)
+    returns_kurt_20: Mapped[float | None] = mapped_column(Float)
+    drawdown: Mapped[float | None] = mapped_column(Float)
+    amihud_illiquidity: Mapped[float | None] = mapped_column(Float)
+    return_mean_20: Mapped[float | None] = mapped_column(Float)
+    return_std_20: Mapped[float | None] = mapped_column(Float)
+    return_zscore_20: Mapped[float | None] = mapped_column(Float)
+    return_zscore_60: Mapped[float | None] = mapped_column(Float)
+
+    upper_wick: Mapped[float | None] = mapped_column(Float)
+    lower_wick: Mapped[float | None] = mapped_column(Float)
+    upper_wick_ratio: Mapped[float | None] = mapped_column(Float)
+    lower_wick_ratio: Mapped[float | None] = mapped_column(Float)
+    body_to_range: Mapped[float | None] = mapped_column(Float)
+
+    price_zscore_20: Mapped[float | None] = mapped_column(Float)
+    price_zscore_50: Mapped[float | None] = mapped_column(Float)
+    price_zscore_200: Mapped[float | None] = mapped_column(Float)
+    high_distance_20: Mapped[float | None] = mapped_column(Float)
+    low_distance_20: Mapped[float | None] = mapped_column(Float)
+
+    volume_zscore_20: Mapped[float | None] = mapped_column(Float)
+    volume_zscore_60: Mapped[float | None] = mapped_column(Float)
+    volume_change_1: Mapped[float | None] = mapped_column(Float)
+    volume_change_5: Mapped[float | None] = mapped_column(Float)
+    vol_ratio_20_60: Mapped[float | None] = mapped_column(Float)
+    volume_trend_20: Mapped[float | None] = mapped_column(Float)
+    vol_change_1: Mapped[float | None] = mapped_column(Float)
+    vol_change_5: Mapped[float | None] = mapped_column(Float)
+
+    atr_ratio: Mapped[float | None] = mapped_column(Float)
+    rsi_change_1: Mapped[float | None] = mapped_column(Float)
+    rsi_change_5: Mapped[float | None] = mapped_column(Float)
+    macd_hist_change_1: Mapped[float | None] = mapped_column(Float)
+    macd_hist_change_5: Mapped[float | None] = mapped_column(Float)
+    macd_hist_zscore_20: Mapped[float | None] = mapped_column(Float)
+
+    bb_width_change: Mapped[float | None] = mapped_column(Float)
+    bb_width_zscore_20: Mapped[float | None] = mapped_column(Float)
+    bb_pct_change: Mapped[float | None] = mapped_column(Float)
+    buy_pressure_change: Mapped[float | None] = mapped_column(Float)
+    trade_count_change: Mapped[float | None] = mapped_column(Float)
+    trade_count_zscore_20: Mapped[float | None] = mapped_column(Float)
+
+    avg_trade_size: Mapped[float | None] = mapped_column(Float)
+    avg_trade_size_zscore_20: Mapped[float | None] = mapped_column(Float)
+    drawdown_change: Mapped[float | None] = mapped_column(Float)
+    drawdown_duration: Mapped[int | None] = mapped_column(BigInteger)
+    recovery_from_drawdown: Mapped[float | None] = mapped_column(Float)
+
+    target_return_1h: Mapped[float | None] = mapped_column(Float)
+    target_return_4h: Mapped[float | None] = mapped_column(Float)
+    target_return_12h: Mapped[float | None] = mapped_column(Float)
+    target_return_24h: Mapped[float | None] = mapped_column(Float)
+    target_return_72h: Mapped[float | None] = mapped_column(Float)
+
+    target_direction_1h: Mapped[int | None] = mapped_column(SmallInteger)
+    target_direction_4h: Mapped[int | None] = mapped_column(SmallInteger)
+    target_direction_12h: Mapped[int | None] = mapped_column(SmallInteger)
+    target_direction_24h: Mapped[int | None] = mapped_column(SmallInteger)
+    target_direction_72h: Mapped[int | None] = mapped_column(SmallInteger)
+
+    target_volatility_4h: Mapped[float | None] = mapped_column(Float)
+    target_volatility_24h: Mapped[float | None] = mapped_column(Float)
+    target_volatility_72h: Mapped[float | None] = mapped_column(Float)
+
+    target_log_return_1h: Mapped[float | None] = mapped_column(Float)
+    target_log_return_4h: Mapped[float | None] = mapped_column(Float)
+    target_log_return_12h: Mapped[float | None] = mapped_column(Float)
+    target_log_return_24h: Mapped[float | None] = mapped_column(Float)
+    target_log_return_72h: Mapped[float | None] = mapped_column(Float)

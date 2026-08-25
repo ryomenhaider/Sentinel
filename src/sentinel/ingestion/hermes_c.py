@@ -19,22 +19,13 @@ hr = Hermes(
     )
 
 async def main():
-    ta = await hr.ta_history.get_history(symbol='BTCUSDT')
-    print('==== TA DATA  of BTCUSDT(test)====')
-    print("features for crypto", list(ta.columns))
-    total_nans = ta.isnull().sum().sum()
-    total_zeros = (ta == 0).sum().sum()
-    print(f'Shape: {ta.shape}')
-    print(f"Total NaNs: {total_nans}")
-    print(f"Total Zeros: {total_zeros}")
+    ta = await hr.ta_history.get_history(symbol='BTCUSDT', interval='1h')
     fa = await hr.fa_history.get_history(symbols=['GOOGL'])
-    print('==== FA DATA of GOOGL(test) ====')
-    print("features for stocks", list(fa.columns))
-    total_nans = fa.isnull().sum().sum()
-    total_zeros = (fa == 0).sum().sum()
-    print(f'Shape: {fa.shape}')
-    print(f"Total NaNs: {total_nans}")
-    print(f"Total Zeros: {total_zeros}")
+    ta = ta.reset_index(drop=True)
+    fa = fa.reset_index(drop=True)
+    ta.to_csv('research/data/TA.csv')
+    fa.to_csv('research/data/FA.csv')
+        
 
 import asyncio
 asyncio.run(main())

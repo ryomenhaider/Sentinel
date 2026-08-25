@@ -2,14 +2,14 @@
 from fastapi import APIRouter, HTTPException
 from sentinel.config.logging_config import get_logger
 from sentinel.database.crud import get_latest_weights
-from sentinel.api.schemas import PortfolioWeightResponse
+from sentinel.api.schemas.small import PortfolioWeightResponse
 from sentinel.database.connection import get_session
 
 logger = get_logger(__name__)
 router = APIRouter()
 
 @router.get('/weights', response_model=list[PortfolioWeightResponse])
-async def get_weights():
+def get_weights():
     with get_session() as session:
         try:
             row = get_latest_weights(session)
@@ -24,7 +24,7 @@ async def get_weights():
 
 
 @router.get('/optimize')
-async def optimize():
+def optimize():
     try:
         import sentinel.ml.portfolio_optimizer as Optimizer
         Optimizer.run()
@@ -37,5 +37,5 @@ async def optimize():
 
 
 @router.get('/backtest')
-async def backtest():
+def backtest():
     return {"message": "coming soon"}

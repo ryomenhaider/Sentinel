@@ -2,14 +2,14 @@
 from fastapi import APIRouter, HTTPException
 from sentinel.config.logging_config import get_logger
 from sentinel.database.crud import get_latest_prices
-from sentinel.api.schemas import MarketDataResponse
+from sentinel.api.schemas.small import MarketDataResponse
 from sentinel.database.connection import get_session
 
 logger = get_logger(__name__)
 router = APIRouter()
 
 @router.get("/compare")
-async def compare_tickers(tickers: str):
+def compare_tickers(tickers: str):
     with get_session() as session:
         try:
             result = {}
@@ -39,7 +39,7 @@ async def compare_tickers(tickers: str):
 
 
 @router.get("/{ticker}", response_model=MarketDataResponse)
-async def get_latest_price(ticker: str):
+def get_latest_price(ticker: str):
     with get_session() as session:
         try:
             rows = get_latest_prices(session, ticker, limit=1)
@@ -54,7 +54,7 @@ async def get_latest_price(ticker: str):
 
 
 @router.get("/{ticker}/history")
-async def get_price_history(ticker: str, limit: int = 90):
+def get_price_history(ticker: str, limit: int = 90):
     with get_session() as session:
         try:
             rows = get_latest_prices(session, ticker, limit)
