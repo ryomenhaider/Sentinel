@@ -1,0 +1,72 @@
+
+from fastapi import APIRouter, HTTPException
+from typing import List
+from sentinel.config.logging_config import get_logger
+from sentinel.database.crud import get_sentiment as fetch_sentiment, get_all_tickers
+from sentinel.api.schemas import SentimentResponse
+from sentinel.database.connection import get_session
+
+logger = get_logger(__name__)
+router = APIRouter()
+
+
+@router.get("/heatmap", response_model=dict)
+async def get_sentiment_heatmap():
+    with get_session() as session:
+        try:
+            tickers = get_all_tickers(session)
+            if not tickers:
+                raise HTTPException(status_code=404, detail="No tickers found")
+            heatmap = {}
+            for ticker in tickers:
+                rows = fetch_sentiment(session, ticker, limit=1)
+                if rows:
+                    row = rows[0]
+                    heatmap[ticker] = {
+                        "id":           row.id,
+                        "ticker":       row.ticker,
+                        "headline":     row.headline,
+                        "source":       row.source,
+                        "published_at": row.published_at.isoformat() if row.published_at else None,
+                        "sentiment":    row.sentiment,
+                        "score":        float(row.score) if row.score else None,
+                        "created_at":   row.created_at.isoformat() if row.created_at else None,
+                    }
+            if not heatmap:
+                raise HTTPException(status_code=404, detail="No sentiment data found")
+            return heatmap
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f'Error fetching sentiment heatmap: {e}')
+            raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.get("/timeline", response_model=List[SentimentResponse])
+async def get_sentiment_timeline(ticker: str, days: int = 30):
+    with get_session() as session:
+        try:
+            rows = fetch_sentiment(session, ticker, limit=days)
+            if not rows:
+                raise HTTPException(status_code=404, detail=f"No sentiment timeline for {ticker} found")
+            return rows
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f'Error fetching sentiment timeline for {ticker}: {e}')
+            raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.get("/{ticker}", response_model=List[SentimentResponse])
+async def get_ticker_sentiment(ticker: str, days: int = 30):
+    with get_session() as session:
+        try:
+            rows = fetch_sentiment(session, ticker, limit=days)
+            if not rows:
+                raise HTTPException(status_code=404, detail=f"No sentiment data for {ticker} found")
+            return rows
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f'Error fetching sentiment for {ticker}: {e}')
+            raise HTTPException(status_code=500, detail="Internal server error")
