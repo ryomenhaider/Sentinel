@@ -1,5 +1,3 @@
-Yep. This is the right level for your **Sentinel v1 roadmap**. I've merged the ML work we discussed with your existing platform roadmap and removed unnecessary duplication.
-
 # Sentinel v1 — Complete Implementation Checklist
 
 ## 1. Data Infrastructure
@@ -640,5 +638,3 @@ From what you've told me:
 24. **Testing**
 25. **CI/CD**
 26. **Documentation**
-
-That gives you a much cleaner definition of what **Sentinel v1 actually means** rather than just "make the ML model better."
