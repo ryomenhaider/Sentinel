@@ -452,6 +452,20 @@ class market_features(Base):
     target_log_return_72h: Mapped[float | None] = mapped_column(Float)
 
 
+class BaselineResult(Base):
+    __tablename__ = "baseline_results"
+
+    id = Column(Integer, primary_key=True)
+    symbol = Column(Text, nullable=False)
+    baseline_name = Column(Text, nullable=False)
+    target_column = Column(Text, nullable=False)
+    horizon = Column(Integer, nullable=False)
+    window_size = Column(Integer, nullable=True)
+    metric_name = Column(Text, nullable=False)
+    metric_value = Column(Float, nullable=False)
+    evaluated_at = Column(TIMESTAMP(timezone=True), server_default=text("NOW()"))
+
+
 class macro_data(Base):
     __tablename__ = "macro_data"
 
