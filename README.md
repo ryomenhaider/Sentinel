@@ -1,8 +1,16 @@
-# Sentinel
+<div align="center">
+
+  # Sentinel
 
 A financial data pipeline and dashboard. It ingests market data, runs ML models, and displays results through a React frontend.
 
-## What it does
+[![Python](https://img.shields.io/badge/Python-3.12-blue)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.141+-009688)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/React-19-61DAFB)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-8-646CFF)](https://vite.dev/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-336791)](https://www.postgresql.org/)
+[![MLflow](https://img.shields.io/badge/MLflow-1.27-0194E2)](https://mlflow.org/)
+</div>
 
 1. Fetches stock prices (yfinance), crypto (CCXT), macro indicators (FRED), and news (newsdata.io)
 2. Engineers features (returns, lags, rolling stats, RSI, Bollinger %B)
