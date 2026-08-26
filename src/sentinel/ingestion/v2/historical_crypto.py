@@ -26,7 +26,6 @@ def forward_std(series: pd.Series, horizon: int) -> pd.Series:
 async def main():
     async with get_async_session() as session:
         try:
-            dfs = []
             for symbol in SYMBOLS:
                 try:
                     ta = await hr.ta_history.get_history(symbol=symbol, interval='1h')
@@ -64,16 +63,13 @@ async def main():
                     ta = pd.concat([ta, targets], axis=1)
 
                     logger.info(f'Target Features are engineered for {symbol}')
-                    dfs.append(ta)
-                    # await insert_crypto_history_data(session=session, data=ta)
+                    await insert_crypto_history_data(session=session, data=ta)
                     logger.info('Data is inserted in the DB')
 
                 except Exception as e:
                     print(f'[{symbol} Unexpected Error: {e}]')
                     await session.rollback()        
-            dfs = pd.concat(dfs, ignore_index=True)
-            dfs.to_csv('research/data/crypto.csv')
-
+            
         except Exception as e:
                 print(f'Unexpected Error: {e}]')
                 await session.rollback()

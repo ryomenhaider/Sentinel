@@ -62,5 +62,25 @@ def all(
     )
 
 
+@cli.command()
+def ml_baselines():
+    """Run baseline forecasting evaluation."""
+    from sentinel.ml.v2.baselines import run_baselines, _print_results
+    from sentinel.ml.v2.baselines import BaselineResult as BR
+
+    symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "XRPUSDT", "SOLUSDT"]
+
+    print(f"Running baselines for {len(symbols)} symbols...")
+    print("This may take a while.\n")
+
+    results = run_baselines(symbols=symbols)
+
+    _print_results(results)
+
+    from sentinel.ml.v2.baselines import insert_baseline_results_sync
+    insert_baseline_results_sync(results)
+    print(f"\nSaved {len(results)} results to database.")
+
+
 if __name__ == "__main__":
     cli()

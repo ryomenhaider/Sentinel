@@ -1,4 +1,4 @@
-
+from pathlib import Path
 from contextlib import asynccontextmanager, contextmanager
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, Session
@@ -14,7 +14,6 @@ engine = create_engine(
         max_overflow=3,
         pool_pre_ping=True,
         pool_recycle=600,
-        connect_args={'sslmode': 'require'},
         echo=False,
     )
 Session_local = sessionmaker(
@@ -24,11 +23,7 @@ Session_local = sessionmaker(
         expire_on_commit=False,
     )
 
-ASYNC_DB_URL = (
-    DB_URL
-    .replace("postgresql://", "postgresql+asyncpg://")
-    .replace("sslmode=require", "ssl=require")
-)
+ASYNC_DB_URL = DB_URL.replace("postgresql://", "postgresql+asyncpg://")
 
 async_engine = create_async_engine(
         ASYNC_DB_URL,
@@ -97,5 +92,27 @@ def test_connection() -> bool:
         return False
 
 
+def run_migrations():
+    migrations_dir = Path(__file__).parent / "migrations"
+    sql_files = sorted(migrations_dir.glob("*.sql"))
+
+    if not sql_files:
+        logger.warning(f"No migration files found in {migrations_dir}")
+        return
+
+    logger.info(f"Found {len(sql_files)} migration(s) in {migrations_dir}")
+
+    with engine.connect() as conn:
+        for sql_file in sql_files:
+            logger.info(f"Running migration: {sql_file.name}")
+            sql = sql_file.read_text()
+            conn.execute(text(sql))
+            conn.commit()
+            logger.info(f"Completed: {sql_file.name}")
+
+    logger.info("All migrations applied successfully")
+
+
 if __name__ == "__main__":
+    run_migrations()
     test_connection()
