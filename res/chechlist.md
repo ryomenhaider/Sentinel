@@ -59,14 +59,14 @@ Yep. This is the right level for your **Sentinel v1 roadmap**. I've merged the M
 
 ## Target Engineering
 
-* [ ] Define forecasting objectives
-* [ ] Define prediction horizons
-* [ ] Return targets
-* [ ] Direction targets
-* [ ] Volatility targets
-* [ ] Target distribution analysis
-* [ ] Target imbalance analysis
-* [ ] Target leakage validation
+* [x] Define forecasting objectives
+* [x] Define prediction horizons
+* [x] Return targets
+* [x] Direction targets
+* [x] Volatility targets
+* [x] Target distribution analysis
+* [x] Target imbalance analysis
+* [x] Target leakage validation
 
 ## Baselines
 

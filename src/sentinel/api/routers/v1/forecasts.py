@@ -2,8 +2,8 @@
 from fastapi import APIRouter, HTTPException
 from typing import List
 from sentinel.config.logging_config import get_logger
-from sentinel.database.crud import get_forecasts as fetch_forecast
-from sentinel.api.schemas.small import ForecastResponse
+from sentinel.database.crud_v1 import get_forecasts as fetch_forecast
+from sentinel.api.schemas.responses import ForecastResponse
 from sentinel.database.connection import get_session
 
 logger = get_logger(__name__)

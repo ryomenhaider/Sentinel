@@ -5,7 +5,7 @@ import pandas as pd
 
 from hermes.sources.fred import fred_series
 
-from sentinel.database.connection import get_session
+from sentinel.database.connection import get_async_session
 from sentinel.database.crud_v2 import insert_macro_data
 from sentinel.ingestion.v2.hermes_c import hr
 
@@ -82,21 +82,11 @@ async def main() -> None:
         len(combined_df),
     )
 
-    def db_write_worker() -> None:
-        with get_session() as session:
-            logger.info("Inserting macro data into database...")
-
-            insert_macro_data(
-                session=session,
-                data=combined_df,
-            )
-
-            logger.info(
-                "Macro data successfully inserted into database."
-            )
-
     try:
-        await asyncio.to_thread(db_write_worker)
+        async with get_async_session() as session:
+            logger.info("Inserting macro data into database...")
+            await insert_macro_data(session=session, data=combined_df)
+            logger.info("Macro data successfully inserted into database.")
     except Exception:
         logger.exception("Database insertion error.")
         return
