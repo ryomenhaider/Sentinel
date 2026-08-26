@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 from datetime import date, datetime
 from typing import Optional
 
@@ -65,3 +65,10 @@ class SentimentResponse(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+class MacroData(BaseModel):
+
+    date: datetime
+    value: float
+    series_id: str
+    unit: str

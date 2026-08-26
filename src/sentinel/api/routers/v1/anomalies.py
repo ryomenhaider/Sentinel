@@ -2,8 +2,8 @@
 from fastapi import APIRouter, HTTPException
 from typing import List
 from sentinel.config.logging_config import get_logger
-from sentinel.database.crud import get_anomalies as fetch_anomalies, get_latest_anomaly as fetch_latest_anomaly
-from sentinel.api.schemas.small import AnomalyResponse
+from sentinel.database.crud_v1 import get_anomalies as fetch_anomalies, get_latest_anomaly as fetch_latest_anomaly
+from sentinel.api.schemas.responses import AnomalyResponse
 from sentinel.database.connection import get_session
 
 logger = get_logger(__name__)

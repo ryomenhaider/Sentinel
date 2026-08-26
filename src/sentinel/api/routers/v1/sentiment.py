@@ -2,8 +2,8 @@
 from fastapi import APIRouter, HTTPException
 from typing import List
 from sentinel.config.logging_config import get_logger
-from sentinel.database.crud import get_sentiment as fetch_sentiment, get_all_tickers
-from sentinel.api.schemas.small import SentimentResponse
+from sentinel.database.crud_v1 import get_sentiment as fetch_sentiment, get_all_tickers
+from sentinel.api.schemas.responses import SentimentResponse
 from sentinel.database.connection import get_session
 
 logger = get_logger(__name__)

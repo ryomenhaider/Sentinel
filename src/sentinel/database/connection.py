@@ -1,9 +1,10 @@
 
-from contextlib import contextmanager
+from contextlib import asynccontextmanager, contextmanager
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sentinel.config.logging_config import get_logger
-from sentinel.config.settings import DB_URL, LOG_LEVEL
+from sentinel.config.settings import DB_URL
 
 logger = get_logger(__name__)
 
@@ -18,6 +19,29 @@ engine = create_engine(
     )
 Session_local = sessionmaker(
         bind=engine,
+        autocommit=False,
+        autoflush=False,
+        expire_on_commit=False,
+    )
+
+ASYNC_DB_URL = (
+    DB_URL
+    .replace("postgresql://", "postgresql+asyncpg://")
+    .replace("sslmode=require", "ssl=require")
+)
+
+async_engine = create_async_engine(
+        ASYNC_DB_URL,
+        pool_size=2,
+        max_overflow=3,
+        pool_pre_ping=True,
+        pool_recycle=600,
+        echo=False,
+        connect_args={"statement_cache_size": 0},
+    )
+AsyncSessionLocal = async_sessionmaker(
+        bind=async_engine,
+        class_=AsyncSession,
         autocommit=False,
         autoflush=False,
         expire_on_commit=False,
@@ -39,6 +63,23 @@ def get_session():
         raise
     finally:
         session.close()
+
+
+@asynccontextmanager
+async def get_async_session():
+    if AsyncSessionLocal is None:
+        raise RuntimeError(
+            "Database is not configured. Set the DB_URL environment variable."
+        )
+    session: AsyncSession = AsyncSessionLocal()
+    try:
+        yield session
+        await session.commit()
+    except Exception:
+        await session.rollback()
+        raise
+    finally:
+        await session.close()
 
 
 def test_connection() -> bool:

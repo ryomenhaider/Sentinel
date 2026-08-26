@@ -4,10 +4,11 @@ from sentinel.database.models import (
     TechnicalSnapshot, CompanyFundamental, market_features,
     macro_data
 )
-from sentinel.database.connection import Session
+from sentinel.database.connection import AsyncSession
+from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 
-def insert_ta_data(session: Session, data: dict):
+async def insert_ta_data(session: AsyncSession, data: dict):
     data = {
         key: value.item() if isinstance(value, np.generic) else value
         for key, value in data.items()
@@ -16,19 +17,18 @@ def insert_ta_data(session: Session, data: dict):
     stmt = stmt.on_conflict_do_nothing(
         index_elements=["symbol", "timestamp_ms"]
     )
-    session.execute(stmt)
-    session.commit()
+    await session.execute(stmt)
 
 
-def get_ta_data(session: Session, symbol: str, limit: int = 1) -> TechnicalSnapshot:
-    return (
-        session.query(TechnicalSnapshot)
-        .filter(TechnicalSnapshot.symbol == symbol)
+async def get_ta_data(session: AsyncSession, symbol: str, limit: int = 1) -> TechnicalSnapshot:
+    result = await session.execute(
+        select(TechnicalSnapshot)
+        .where(TechnicalSnapshot.symbol == symbol)
         .limit(limit)
-        .first()
     )
+    return result.scalars().first()
 
-def insert_fa_data(session: Session, data: dict):
+async def insert_fa_data(session: AsyncSession, data: dict):
     data = {
         key: value.item() if isinstance(value, np.generic) else value
         for key, value in data.items()
@@ -37,37 +37,35 @@ def insert_fa_data(session: Session, data: dict):
     stmt = stmt.on_conflict_do_nothing(
         index_elements=["ticker", "filing_date"]
     )
-    session.execute(stmt)
-    session.commit()
+    await session.execute(stmt)
 
-def insert_crypto_history_data(session: Session, data: pd.DataFrame):
+async def insert_crypto_history_data(session: AsyncSession, data: pd.DataFrame):
     df = data.copy()
     for col in ["drawdown_duration", "trades_count"]:
         if col in df.columns:
             df[col] = np.where(df[col].isna(), None, df[col])
     mappings = df.to_dict(orient='records')
 
-    session.bulk_insert_mappings(market_features, mappings)
-    session.commit()
+    await session.execute(insert(market_features).values(mappings))
 
-def get_crypto_history_data(session: Session, symbol: str, limit: int = 1000):
-    return (
-        session.query(market_features)
-        .filter(market_features.symbol == symbol)
-        .limit(limit=limit)
-        .all()
-    )
-
-def get_fa_data(session: Session, ticker: str, limit: int = 1) -> CompanyFundamental:
-    return (
-        session.query(CompanyFundamental)
-        .filter(CompanyFundamental.ticker == ticker)
+async def get_crypto_history_data(session: AsyncSession, symbol: str, limit: int = 1000):
+    result = await session.execute(
+        select(market_features)
+        .where(market_features.symbol == symbol)
         .limit(limit)
-        .first()
     )
+    return result.scalars().all()
 
-def insert_macro_data(
-    session: Session,
+async def get_fa_data(session: AsyncSession, ticker: str, limit: int = 1) -> CompanyFundamental:
+    result = await session.execute(
+        select(CompanyFundamental)
+        .where(CompanyFundamental.ticker == ticker)
+        .limit(limit)
+    )
+    return result.scalars().first()
+
+async def insert_macro_data(
+    session: AsyncSession,
     data: pd.DataFrame,
 ) -> None:
 
@@ -101,14 +99,12 @@ def insert_macro_data(
             )
         )
 
-        session.execute(stmt)
+        await session.execute(stmt)
 
-    session.commit()
-    
-def get_macro_data(session: Session, series_id: str, limit: int = 100) -> macro_data:
-    return (
-        session.query(macro_data)
-        .filter(macro_data.series_id == series_id)
-        .limit(limit=limit)
-        .all()
+async def get_macro_data(session: AsyncSession, series_id: str, limit: int = 100) -> macro_data:
+    result = await session.execute(
+        select(macro_data)
+        .where(macro_data.series_id == series_id)
+        .limit(limit)
     )
+    return result.scalars().all()
