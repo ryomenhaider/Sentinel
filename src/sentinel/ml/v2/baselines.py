@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
+from sqlalchemy import text
 from sklearn.linear_model import LogisticRegression as SKLogisticRegression
 
 
@@ -255,8 +256,9 @@ def _evaluate_walk_forward(
     return {"mae": mae, "rmse": rmse, "r2": r2, "directional_accuracy": dir_acc}
 
 
-def run_baselines(symbols: list[str]) -> list[BaselineResult]:
+def run_baselines(symbols: list[str], save: bool = False) -> list[BaselineResult]:
     from sentinel.database.connection import engine
+    from sentinel.database.crud_v2 import get_baseline_results_sync, insert_baseline_results_sync
 
     results: list[BaselineResult] = []
 
@@ -276,12 +278,12 @@ def run_baselines(symbols: list[str]) -> list[BaselineResult]:
         ("target_volatility_72h", "volatility", 72),
     ]
 
-    query = """
+    query = text("""
         SELECT *
         FROM market_features
         WHERE symbol = :symbol
         ORDER BY date_time ASC
-    """
+    """)
 
     with engine.connect() as conn:
         for symbol in symbols:
@@ -324,6 +326,9 @@ def run_baselines(symbols: list[str]) -> list[BaselineResult]:
                             )
                     except Exception as e:
                         print(f"Error evaluating {baseline_name} on {symbol}/{target_col}: {e}")
+
+    if save and results:
+        insert_baseline_results_sync(results)
 
     return results
 

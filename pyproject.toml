@@ -11,6 +11,7 @@ dependencies = [
     "fastapi>=0.141.1",
     "hermes-plt>=0.2.11",
     "ipykernel>=7.3.0",
+    "lightgbm>=4.7.0",
     "llvmlite>=0.43",
     "mlflow==1.27.0",
     "numba>=0.60",
