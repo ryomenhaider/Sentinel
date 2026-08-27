@@ -68,12 +68,12 @@
 
 ## Baselines
 
-* [ ] Naive forecasting baseline
-* [ ] Historical mean baseline
-* [ ] Historical volatility baseline
-* [ ] Statistical baseline
-* [ ] Simple regression baseline
-* [ ] Simple classification baseline
+* [x] Naive forecasting baseline
+* [x] Historical mean baseline
+* [x] Historical volatility baseline
+* [x] Statistical baseline
+* [x] Simple regression baseline
+* [x] Simple classification baseline
 
 ## ML Models
 

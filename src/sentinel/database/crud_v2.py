@@ -44,9 +44,21 @@ async def insert_crypto_history_data(session: AsyncSession, data: pd.DataFrame):
     for col in ["drawdown_duration", "trades_count"]:
         if col in df.columns:
             df[col] = np.where(df[col].isna(), None, df[col])
+
+    for col in ["date_time", "close_time"]:
+        if col in df.columns:
+            df[col] = pd.to_datetime(df[col], utc=True)
+
     mappings = df.to_dict(orient='records')
 
-    await session.execute(insert(market_features).values(mappings))
+    batch_size = 300
+    for i in range(0, len(mappings), batch_size):
+        batch = mappings[i:i + batch_size]
+        stmt = insert(market_features).values(batch)
+        stmt = stmt.on_conflict_do_nothing(
+            index_elements=["symbol", "interval", "open_time"]
+        )
+        await session.execute(stmt)
 
 async def get_crypto_history_data(session: AsyncSession, symbol: str, limit: int = 1000):
     result = await session.execute(
