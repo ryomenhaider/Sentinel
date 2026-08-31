@@ -6,7 +6,6 @@ readme = "README.md"
 requires-python = ">=3.11,<3.13"
 dependencies = [
     "asyncpg>=0.31.0",
-    "ccxt>=4.5.71",
     "dotenv>=0.9.9",
     "fastapi>=0.141.1",
     "hermes-plt>=0.2.11",

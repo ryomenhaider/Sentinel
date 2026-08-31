@@ -5,6 +5,7 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 from sqlalchemy import text
+from tabulate import tabulate
 from sklearn.linear_model import LogisticRegression as SKLogisticRegression
 
 
@@ -256,7 +257,7 @@ def _evaluate_walk_forward(
     return {"mae": mae, "rmse": rmse, "r2": r2, "directional_accuracy": dir_acc}
 
 
-def run_baselines(symbols: list[str], save: bool = False) -> list[BaselineResult]:
+def run_baselines(symbols: list[str]) -> list[BaselineResult]:
     from sentinel.database.connection import engine
     from sentinel.database.crud_v2 import get_baseline_results_sync, insert_baseline_results_sync
 
@@ -285,6 +286,7 @@ def run_baselines(symbols: list[str], save: bool = False) -> list[BaselineResult
         ORDER BY date_time ASC
     """)
 
+    """    
     with engine.connect() as conn:
         for symbol in symbols:
             df = pd.read_sql(sql=query, con=conn, params={"symbol": symbol})
@@ -327,8 +329,22 @@ def run_baselines(symbols: list[str], save: bool = False) -> list[BaselineResult
                     except Exception as e:
                         print(f"Error evaluating {baseline_name} on {symbol}/{target_col}: {e}")
 
-    if save and results:
-        insert_baseline_results_sync(results)
+    insert_baseline_results_sync(results)"""
+
+    df = get_baseline_results_sync()
+
+    results = [
+        BaselineResult(
+            symbol=row["symbol"],
+            baseline_name=row["baseline_name"],
+            target_column=row["target_column"],
+            horizon=row["horizon"],
+            window_size=row["window_size"],
+            metric_name=row["metric_name"],
+            metric_value=row["metric_value"],
+        )
+        for _, row in df.iterrows()
+    ]
 
     return results
 
@@ -361,20 +377,29 @@ def _print_results(results: list[BaselineResult]) -> None:
                 aggfunc="first",
             ).reset_index()
 
+            window = pivot.pop("window_size")
+            pivot.insert(1, "window_size", window)
+
             pivot = pivot.sort_values("mae")
+            pivot = pivot.rename(
+                columns={
+                    "baseline_name": "Baseline",
+                    "window_size": "Window",
+                    "directional_accuracy": "DirAcc",
+                }
+            )
+            pivot["Window"] = pivot["Window"].fillna("-")
 
-            print(f"  {'Baseline':<30} {'Window':>6} {'MAE':>10} {'RMSE':>10} {'R2':>10} {'DirAcc':>10}")
-            print(f"  {'-' * 30} {'-' * 6} {'-' * 10} {'-' * 10} {'-' * 10} {'-' * 10}")
+            print(tabulate(pivot, headers="keys", tablefmt="simple", floatfmt=".6f", showindex=False))
 
-            for _, row in pivot.iterrows():
-                name = row["baseline_name"]
-                window = row["window_size"] if pd.notna(row["window_size"]) else "-"
-                mae = row.get("mae", 0)
-                rmse = row.get("rmse", 0)
-                r2 = row.get("r2", 0)
-                dir_acc = row.get("directional_accuracy", 0)
 
-                print(
-                    f"  {name:<30} {str(window):>6} "
-                    f"{mae:>10.6f} {rmse:>10.6f} {r2:>10.6f} {dir_acc:>9.2%}"
-                )
+if __name__ == "__main__":
+    symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "XRPUSDT", "SOLUSDT"]
+
+    print(f"Running baselines for {len(symbols)} symbols...")
+    print("This may take a while.\n")
+
+    results = run_baselines(symbols=symbols)
+
+    _print_results(results)
+    print(f"\nSaved {len(results)} results to database.")
