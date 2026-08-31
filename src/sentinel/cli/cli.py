@@ -68,7 +68,7 @@ def ml_baselines():
     print(f"Running baselines for {len(symbols)} symbols...")
     print("This may take a while.\n")
 
-    results = run_baselines(symbols=symbols, save=True)
+    results = run_baselines(symbols=symbols)
 
     _print_results(results)
     print(f"\nSaved {len(results)} results to database.")
